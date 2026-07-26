@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post a Job — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section style="background:var(--navy-950);padding:40px 0 30px">
+  <div class="container">
+    <h1 style="color:#fff;font-size:1.8rem">Post a new job</h1>
+    <p style="color:rgba(255,255,255,0.6);margin-top:6px">Fill in the details below — it'll go live immediately.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:40px">
+  <div class="container" style="max-width:760px">
+    <div id="alertBox" class="alert alert-error"></div>
+    <form id="jobForm" class="card" style="padding:32px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Job title</label>
+          <input type="text" id="title" required placeholder="e.g. Frontend Developer">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="location" required placeholder="e.g. Bengaluru or Remote">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Job type</label>
+          <select id="jobType">
+            <option>Full-time</option>
+            <option>Part-time</option>
+            <option>Internship</option>
+            <option>Contract</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Work mode</label>
+          <select id="workMode">
+            <option>Onsite</option>
+            <option>Remote</option>
+            <option>Hybrid</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" id="category" placeholder="e.g. Engineering, Sales">
+        </div>
+        <div class="form-group">
+          <label>Experience required</label>
+          <select id="experience">
+            <option>Fresher</option>
+            <option>0-1 years</option>
+            <option>1-3 years</option>
+            <option>3-5 years</option>
+            <option>5+ years</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Min salary (₹/yr)</label>
+          <input type="number" id="minSalary" placeholder="e.g. 400000">
+        </div>
+        <div class="form-group">
+          <label>Max salary (₹/yr)</label>
+          <input type="number" id="maxSalary" placeholder="e.g. 700000">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Openings</label>
+          <input type="number" id="openings" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label>Application deadline</label>
+          <input type="date" id="applicationDeadline">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Job description</label>
+        <textarea id="description" rows="5" required placeholder="Describe the role..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Responsibilities (one per line)</label>
+        <textarea id="responsibilities" rows="3" placeholder="Write clean, tested code&#10;Collaborate with design team"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Skills required (comma separated)</label>
+        <input type="text" id="skillsRequired" placeholder="e.g. React, Node.js, MongoDB">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Post job</button>
+    </form>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('post');
+  Auth.requireRole(['recruiter']);
+
+  const alertBox = document.getElementById('alertBox');
+  document.getElementById('jobForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Posting...';
+    try {
+      const body = {
+        title: document.getElementById('title').value,
+        location: document.getElementById('location').value,
+        jobType: document.getElementById('jobType').value,
+        workMode: document.getElementById('workMode').value,
+        category: document.getElementById('category').value || 'General',
+        experience: document.getElementById('experience').value,
+        minSalary: Number(document.getElementById('minSalary').value) || 0,
+        maxSalary: Number(document.getElementById('maxSalary').value) || 0,
+        openings: Number(document.getElementById('openings').value) || 1,
+        applicationDeadline: document.getElementById('applicationDeadline').value || undefined,
+        description: document.getElementById('description').value,
+        responsibilities: document.getElementById('responsibilities').value.split('\n').map(s => s.trim()).filter(Boolean),
+        skillsRequired: document.getElementById('skillsRequired').value.split(',').map(s => s.trim()).filter(Boolean)
+      };
+      const { job } = await apiRequest('/jobs', { method: 'POST', body });
+      window.location.href = `job-detail.html?id=${job._id}`;
+    } catch (err) {
+      showAlert(alertBox, err.message);
+      btn.disabled = false;
+      btn.textContent = 'Post job';
+    }
+  });
+</script>
+</body>
+</html>

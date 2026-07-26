@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section class="dash-header">
+  <div class="container">
+    <h1>My dashboard</h1>
+    <p>Track applications, saved jobs and your profile — all in one place.</p>
+  </div>
+</section>
+
+<div class="container">
+  <div class="stat-strip" style="grid-template-columns: 1.4fr 1fr 1fr 1fr">
+    <div class="stat-card">
+      <div class="flex-between mb-8">
+        <div class="label">Profile completion</div>
+        <div class="label mono" id="completionPct">—</div>
+      </div>
+      <div style="background:var(--cream-100);border-radius:999px;height:8px;overflow:hidden">
+        <div id="completionBar" style="background:var(--teal-500);height:100%;width:0%;transition:width 0.3s"></div>
+      </div>
+      <a href="profile.html" class="text-muted" style="font-size:0.78rem;display:inline-block;margin-top:10px">Complete your profile →</a>
+    </div>
+    <div class="stat-card"><div class="num" id="statApplied">—</div><div class="label">Jobs applied</div></div>
+    <div class="stat-card"><div class="num teal" id="statSaved">—</div><div class="label">Jobs saved</div></div>
+    <div class="stat-card"><div class="num amber" id="statSelected">—</div><div class="label">Selected</div></div>
+  </div>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="dash-tabs">
+      <div class="dash-tab active" data-tab="applied">Applied jobs</div>
+      <div class="dash-tab" data-tab="saved">Saved jobs</div>
+    </div>
+    <div id="tabContent"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('apps');
+  const user = Auth.requireRole(['user']);
+
+  const STAGES = ['Applied', 'Shortlisted', 'Interview', 'Selected'];
+
+  function statusTimelineHtml(status) {
+    if (status === 'Rejected') {
+      return `<span class="status-pill status-Rejected">Rejected</span>`;
+    }
+    const currentIdx = STAGES.indexOf(status);
+    return `
+      <div class="flex gap-8" title="${status}">
+        ${STAGES.map((s, i) => `
+          <span style="width:9px;height:9px;border-radius:50%;background:${i <= currentIdx ? 'var(--teal-500)' : 'var(--line)'}"></span>
+        `).join('')}
+        <span style="font-size:0.78rem;color:var(--ink-500);margin-left:4px">${status}</span>
+      </div>
+    `;
+  }
+
+  function computeCompletion(u) {
+    const fields = [u.resumeUrl, u.phone, u.college, u.branch, u.graduationYear, (u.skills || []).length > 0, u.bio];
+    const filled = fields.filter(Boolean).length;
+    return Math.round((filled / fields.length) * 100);
+  }
+
+  async function loadStats() {
+    try {
+      const { user: freshUser } = await apiRequest('/auth/me');
+      Auth.setSession(Auth.getToken(), freshUser);
+      const pct = computeCompletion(freshUser);
+      document.getElementById('completionPct').textContent = pct + '%';
+      document.getElementById('completionBar').style.width = pct + '%';
+      document.getElementById('statSaved').textContent = (freshUser.savedJobs || []).length;
+
+      const { applications } = await apiRequest('/applications/mine');
+      document.getElementById('statApplied').textContent = applications.length;
+      document.getElementById('statSelected').textContent = applications.filter(a => a.status === 'Selected').length;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  let activeTab = 'applied';
+  document.querySelectorAll('.dash-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      loadTab();
+    });
+  });
+
+  async function loadTab() {
+    const el = document.getElementById('tabContent');
+    el.innerHTML = '<div class="spinner"></div>';
+    try {
+      if (activeTab === 'applied') {
+        const { applications } = await apiRequest('/applications/mine');
+        el.innerHTML = applications.length ? `
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Job</th><th>Company</th><th>Applied on</th><th>Status</th></tr></thead>
+              <tbody>
+                ${applications.map(a => `
+                  <tr>
+                    <td><a href="job-detail.html?id=${a.job._id}" style="font-weight:600">${escapeHtml(a.job.title)}</a></td>
+                    <td>${escapeHtml(a.job.company)}</td>
+                    <td>${timeAgo(a.createdAt)}</td>
+                    <td>${statusTimelineHtml(a.status)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>` : `<div class="empty-state"><div class="icon">📭</div><h3>No applications yet</h3><p>Browse jobs and apply to see them tracked here.</p><a href="jobs.html" class="btn btn-primary mt-16">Browse jobs</a></div>`;
+      } else {
+        const { jobs } = await apiRequest('/jobs/saved/mine');
+        el.innerHTML = jobs.length ? `
+          <div class="grid grid-3">
+            ${jobs.map(job => `
+              <div class="card job-card" style="position:relative">
+                <button class="save-heart" onclick="unsaveJob('${job._id}')" title="Remove from saved">❤️</button>
+                <a href="job-detail.html?id=${job._id}" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:12px">
+                  <div class="job-card-top">
+                    <div>
+                      <div class="job-title">${escapeHtml(job.title)}</div>
+                      <div class="job-company">${escapeHtml(job.company)} · ${escapeHtml(job.location)}</div>
+                    </div>
+                    <div class="job-logo">${escapeHtml(job.company.charAt(0))}</div>
+                  </div>
+                  <div class="job-tags">
+                    <span class="tag tag-teal">${escapeHtml(job.jobType)}</span>
+                    <span class="tag">${escapeHtml(job.workMode)}</span>
+                  </div>
+                  <div class="job-meta"><span class="job-salary">${formatSalary(job.minSalary, job.maxSalary)}</span></div>
+                </a>
+              </div>
+            `).join('')}
+          </div>` : `<div class="empty-state"><div class="icon">🤍</div><h3>No saved jobs yet</h3><p>Tap the heart icon on any job to save it for later.</p><a href="jobs.html" class="btn btn-primary mt-16">Browse jobs</a></div>`;
+      }
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  async function unsaveJob(jobId) {
+    try {
+      const data = await apiRequest(`/jobs/${jobId}/save`, { method: 'POST' });
+      Auth.setSession(Auth.getToken(), { ...Auth.getUser(), savedJobs: data.savedJobs });
+      Toast.show('Removed from saved jobs', 'success');
+      loadTab();
+      loadStats();
+    } catch (err) {
+      Toast.show(err.message, 'error');
+    }
+  }
+
+  loadStats();
+  loadTab();
+</script>
+</body>
+</html>

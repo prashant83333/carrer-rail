@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerRail — Job Portal for Students & Recruiters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section class="hero">
+  <div class="container">
+    <span class="hero-eyebrow">● Built for campus placements</span>
+    <h1>Find the job that starts your <span class="accent">career track</span>, not just your next role.</h1>
+    <p class="lead">One portal to search openings, apply with your resume, track every application, and prepare for interviews — built for students, recruiters, and placement cells.</p>
+    <div class="hero-actions">
+      <a href="jobs.html" class="btn btn-primary">Browse Jobs</a>
+      <a href="signup.html" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.4)">Create Free Account</a>
+    </div>
+
+    <form class="search-bar" id="heroSearchForm">
+      <input type="text" id="heroQ" placeholder="Job title, skill or company (e.g. React, TCS)">
+      <input type="text" id="heroLoc" placeholder="Location">
+      <button type="submit" class="btn btn-amber">Search</button>
+    </form>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num" id="statJobs">—</div><div class="label">Active job openings</div></div>
+      <div class="hero-stat"><div class="num" id="statCompanies">—</div><div class="label">Hiring companies</div></div>
+      <div class="hero-stat"><div class="num">6</div><div class="label">Placement prep tracks</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="track">
+  <div class="container">
+    <div class="track-heading">
+      <span class="eyebrow">How it works</span>
+      <h2>From application to offer letter</h2>
+      <p>A simple, four-stop track — the same one every applicant on CareerRail follows.</p>
+    </div>
+    <div class="track-rail">
+      <div class="track-step">
+        <div class="marker">01</div>
+        <h4>Build your profile</h4>
+        <p>Add your skills and upload a resume once — reuse it for every application.</p>
+      </div>
+      <div class="track-step">
+        <div class="marker">02</div>
+        <h4>Search & apply</h4>
+        <p>Filter by role, location, salary and mode to find jobs that actually fit.</p>
+      </div>
+      <div class="track-step">
+        <div class="marker">03</div>
+        <h4>Prepare</h4>
+        <p>Work through aptitude, DSA, CS fundamentals and HR prep tracks.</p>
+      </div>
+      <div class="track-step">
+        <div class="marker">04</div>
+        <h4>Track & get hired</h4>
+        <p>Follow your application status live — Applied to Selected.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Latest openings</h2>
+        <p>Freshly posted roles from recruiters on CareerRail.</p>
+      </div>
+      <a href="jobs.html" class="btn btn-outline btn-sm">View all jobs →</a>
+    </div>
+    <div class="grid grid-3" id="featuredJobs">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Placement preparation</h2>
+        <p>Everything you need before the interview — not just the job listing.</p>
+      </div>
+      <a href="placement-prep.html" class="btn btn-outline btn-sm">Explore all tracks →</a>
+    </div>
+    <div class="grid grid-3" id="prepPreview">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Companies hiring on CareerRail</h2>
+        <p>A sample of the companies actively posting roles right now.</p>
+      </div>
+    </div>
+    <div class="grid grid-4" id="topCompanies">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>What students say</h2>
+        <p>Early feedback from students using CareerRail for their placement drive.</p>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <div class="card" style="padding:26px">
+        <p style="color:var(--ink-700);font-style:italic">"Having the prep tracks and the job search in one place saved me from juggling five different tabs during placement season."</p>
+        <div class="flex gap-12 mt-24">
+          <div class="job-logo" style="background:var(--teal-500);color:var(--navy-950)">A</div>
+          <div><div style="font-weight:600;font-size:0.9rem">Aditi Sharma</div><div class="text-muted" style="font-size:0.8rem">Final year, CSE</div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:26px">
+        <p style="color:var(--ink-700);font-style:italic">"The application status tracker meant I actually knew where I stood with each company, instead of just waiting on email."</p>
+        <div class="flex gap-12 mt-24">
+          <div class="job-logo" style="background:var(--amber-400);color:var(--navy-950)">R</div>
+          <div><div style="font-weight:600;font-size:0.9rem">Rohan Mehta</div><div class="text-muted" style="font-size:0.8rem">Final year, ECE</div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:26px">
+        <p style="color:var(--ink-700);font-style:italic">"Posting a role and reviewing resumes took a fraction of the time compared to sorting through email attachments."</p>
+        <div class="flex gap-12 mt-24">
+          <div class="job-logo" style="background:var(--navy-800);color:var(--teal-400)">S</div>
+          <div><div style="font-weight:600;font-size:0.9rem">Sanya Kapoor</div><div class="text-muted" style="font-size:0.8rem">Talent Acquisition, hiring partner</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container" style="max-width:800px">
+    <div class="section-head" style="justify-content:center;text-align:center;flex-direction:column">
+      <h2>Frequently asked questions</h2>
+    </div>
+    <div id="faqList" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">CareerRail.</div>
+        <p style="max-width:280px">A campus-friendly job portal — apply, track and prepare, all in one place.</p>
+        <div class="flex gap-12 mt-16" id="socialLinks">
+          <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn" class="social-icon">in</a>
+          <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub" class="social-icon">gh</a>
+          <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter" class="social-icon">tw</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="jobs.html">Browse Jobs</a>
+        <a href="placement-prep.html">Placement Prep</a>
+        <a href="signup.html">Sign up</a>
+        <a href="login.html">Log in</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 CareerRail. Built for students &amp; recruiters.</div>
+  </div>
+</footer>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('home');
+
+  document.getElementById('heroSearchForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = document.getElementById('heroQ').value.trim();
+    const loc = document.getElementById('heroLoc').value.trim();
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (loc) params.set('location', loc);
+    window.location.href = `jobs.html?${params.toString()}`;
+  });
+
+  async function loadFeaturedJobs() {
+    const el = document.getElementById('featuredJobs');
+    try {
+      const data = await apiRequest('/jobs?limit=6');
+      document.getElementById('statJobs').textContent = data.total;
+      const companies = new Set(data.jobs.map(j => j.company));
+      document.getElementById('statCompanies').textContent = companies.size + '+';
+
+      if (!data.jobs.length) {
+        el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🗂️</div><h3>No jobs posted yet</h3><p>Check back soon, or sign up as a recruiter to post the first one.</p></div>`;
+        return;
+      }
+      el.innerHTML = data.jobs.slice(0, 6).map(jobCardHtml).join('');
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">Couldn't load jobs right now.</p>`;
+    }
+  }
+
+  function jobCardHtml(job) {
+    const skills = (job.skillsRequired || []).slice(0, 3);
+    return `
+      <a href="job-detail.html?id=${job._id}" class="card job-card">
+        <div class="job-card-top">
+          <div>
+            <div class="job-title">${escapeHtml(job.title)}</div>
+            <div class="job-company">${escapeHtml(job.company)} · ${escapeHtml(job.location)}</div>
+          </div>
+          <div class="job-logo">${escapeHtml(job.company.charAt(0))}</div>
+        </div>
+        <div class="job-tags">
+          <span class="tag tag-teal">${escapeHtml(job.jobType)}</span>
+          <span class="tag">${escapeHtml(job.workMode)}</span>
+          <span class="tag tag-amber">${escapeHtml(job.experience)}</span>
+        </div>
+        ${skills.length ? `<div class="job-tags">${skills.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+        <div class="job-meta">
+          <span class="job-salary">${formatSalary(job.minSalary, job.maxSalary)}</span>
+          <span class="job-deadline">${timeAgo(job.createdAt)}</span>
+        </div>
+      </a>`;
+  }
+
+  async function loadPrepPreview() {
+    const el = document.getElementById('prepPreview');
+    try {
+      const data = await apiRequest('/prep');
+      el.innerHTML = data.tracks.slice(0, 3).map(t => `
+        <div class="card prep-card">
+          <div class="prep-icon">${prepIcon(t.icon)}</div>
+          <h3>${escapeHtml(t.title)}</h3>
+          <p>${escapeHtml(t.description)}</p>
+        </div>
+      `).join('');
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">Couldn't load prep tracks right now.</p>`;
+    }
+  }
+
+  function prepIcon(name) {
+    const icons = {
+      calculator: '🧮', code: '💻', layers: '🗄️', network: '🌐', users: '🗣️', file: '📄'
+    };
+    return icons[name] || '📘';
+  }
+
+  async function loadTopCompanies() {
+    const el = document.getElementById('topCompanies');
+    try {
+      const data = await apiRequest('/jobs?limit=50');
+      const companies = [...new Set(data.jobs.map(j => j.company))].slice(0, 8);
+      if (!companies.length) {
+        el.innerHTML = `<p class="text-muted" style="grid-column:1/-1">No companies hiring yet — be the first recruiter to post a job.</p>`;
+        return;
+      }
+      el.innerHTML = companies.map(c => `
+        <a href="jobs.html?q=${encodeURIComponent(c)}" class="card text-center" style="padding:26px 16px">
+          <div class="job-logo" style="margin:0 auto 12px">${escapeHtml(c.charAt(0))}</div>
+          <div style="font-weight:600;font-size:0.9rem">${escapeHtml(c)}</div>
+        </a>
+      `).join('');
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">Couldn't load companies right now.</p>`;
+    }
+  }
+
+  const faqs = [
+    { q: 'Is CareerRail free for students?', a: 'Yes — creating a job-seeker account, uploading your resume, applying to jobs, and using the placement prep tracks are all free.' },
+    { q: 'Can I apply to a job without uploading a resume?', a: 'No — a resume upload is required before your first application, since it\u2019s attached to every job you apply to. You can upload it once from your profile page.' },
+    { q: 'How do I track my application status?', a: 'Go to "My Applications" from the navbar — it shows a live status for every job you\u2019ve applied to, from Applied through to Selected or Rejected.' },
+    { q: 'Can recruiters post more than one job?', a: 'Yes — recruiters can post unlimited job openings and manage them all from their dashboard, including closing or reopening a listing.' }
+  ];
+
+  function renderFaq() {
+    document.getElementById('faqList').innerHTML = faqs.map((f, i) => `
+      <div class="card faq-item">
+        <button class="faq-question" onclick="toggleFaq(${i})">
+          <span>${escapeHtml(f.q)}</span>
+          <span class="faq-icon" id="faqIcon${i}">+</span>
+        </button>
+        <div class="faq-answer" id="faqAnswer${i}">${escapeHtml(f.a)}</div>
+      </div>
+    `).join('');
+  }
+
+  function toggleFaq(i) {
+    const answer = document.getElementById(`faqAnswer${i}`);
+    const icon = document.getElementById(`faqIcon${i}`);
+    const open = answer.classList.toggle('open');
+    icon.textContent = open ? '−' : '+';
+  }
+
+  loadFeaturedJobs();
+  loadPrepPreview();
+  loadTopCompanies();
+  renderFaq();
+</script>
+</body>
+</html>
