@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Content — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section class="dash-header">
+  <div class="container">
+    <h1>Manage content</h1>
+    <p>Create quizzes and coding problems for students. Notes are uploaded from the Notes page.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:40px">
+  <div class="container">
+    <div class="dash-tabs">
+      <div class="dash-tab active" data-tab="quiz-new">+ New quiz</div>
+      <div class="dash-tab" data-tab="coding-new">+ New coding problem</div>
+      <div class="dash-tab" data-tab="quiz-list">Manage quizzes</div>
+      <div class="dash-tab" data-tab="coding-list">Manage coding problems</div>
+    </div>
+    <div id="tabContent"></div>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('content');
+  Auth.requireRole(['admin']);
+
+  let activeTab = 'quiz-new';
+  document.querySelectorAll('.dash-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      renderTab();
+    });
+  });
+
+  // ============ New Quiz form ============
+  let questionCount = 0;
+  function newQuizFormHtml() {
+    return `
+      <div id="alertBox" class="alert alert-error"></div>
+      <form id="quizForm" class="card" style="padding:28px">
+        <div class="form-row">
+          <div class="form-group"><label>Quiz title</label><input type="text" id="quizTitle" required></div>
+          <div class="form-group"><label>Subject</label><input type="text" id="quizSubject" required placeholder="e.g. Aptitude, Programming"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Description</label><input type="text" id="quizDescription"></div>
+          <div class="form-group"><label>Duration (minutes)</label><input type="number" id="quizDuration" value="10" min="1"></div>
+        </div>
+        <div id="questionsContainer"></div>
+        <button type="button" class="btn btn-outline btn-block mt-8" id="addQuestionBtn">+ Add question</button>
+        <button type="submit" class="btn btn-primary btn-block mt-16" id="quizSubmitBtn">Create quiz</button>
+      </form>
+    `;
+  }
+
+  function addQuestionRow() {
+    const idx = questionCount++;
+    const wrap = document.createElement('div');
+    wrap.className = 'card mt-16';
+    wrap.style.padding = '18px';
+    wrap.dataset.qIdx = idx;
+    wrap.innerHTML = `
+      <div class="flex-between mb-8">
+        <span style="font-weight:600;font-size:0.85rem">Question ${idx + 1}</span>
+        <button type="button" class="btn btn-ghost btn-sm remove-question">Remove</button>
+      </div>
+      <div class="form-group"><input type="text" placeholder="Question text" class="q-text" required></div>
+      <div class="form-group"><input type="text" placeholder="Option 1" class="q-opt" required></div>
+      <div class="form-group"><input type="text" placeholder="Option 2" class="q-opt" required></div>
+      <div class="form-group"><input type="text" placeholder="Option 3" class="q-opt" required></div>
+      <div class="form-group"><input type="text" placeholder="Option 4" class="q-opt" required></div>
+      <div class="form-group">
+        <label style="font-size:0.8rem">Correct option</label>
+        <select class="q-correct">
+          <option value="0">Option 1</option>
+          <option value="1">Option 2</option>
+          <option value="2">Option 3</option>
+          <option value="3">Option 4</option>
+        </select>
+      </div>
+    `;
+    wrap.querySelector('.remove-question').addEventListener('click', () => wrap.remove());
+    document.getElementById('questionsContainer').appendChild(wrap);
+  }
+
+  function wireQuizForm() {
+    questionCount = 0;
+    document.getElementById('questionsContainer').innerHTML = '';
+    addQuestionRow();
+    document.getElementById('addQuestionBtn').addEventListener('click', addQuestionRow);
+
+    document.getElementById('quizForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rows = document.querySelectorAll('#questionsContainer > div');
+      if (!rows.length) { Toast.show('Add at least one question', 'error'); return; }
+
+      const questions = Array.from(rows).map(row => ({
+        questionText: row.querySelector('.q-text').value,
+        options: Array.from(row.querySelectorAll('.q-opt')).map(i => i.value),
+        correctIndex: Number(row.querySelector('.q-correct').value)
+      }));
+
+      const btn = document.getElementById('quizSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      try {
+        await apiRequest('/quizzes', {
+          method: 'POST',
+          body: {
+            title: document.getElementById('quizTitle').value,
+            subject: document.getElementById('quizSubject').value,
+            description: document.getElementById('quizDescription').value,
+            durationMinutes: Number(document.getElementById('quizDuration').value) || 10,
+            questions
+          }
+        });
+        Toast.show('Quiz created', 'success');
+        renderTab();
+      } catch (err) {
+        showAlert(document.getElementById('alertBox'), err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create quiz';
+      }
+    });
+  }
+
+  // ============ New Coding Problem form ============
+  let testCaseCount = 0;
+  function newCodingFormHtml() {
+    return `
+      <div id="alertBox" class="alert alert-error"></div>
+      <form id="codingForm" class="card" style="padding:28px">
+        <div class="form-row">
+          <div class="form-group"><label>Problem title</label><input type="text" id="probTitle" required></div>
+          <div class="form-group"><label>Difficulty</label>
+            <select id="probDifficulty"><option>Easy</option><option>Medium</option><option>Hard</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Function name (student must define this)</label><input type="text" id="probFunctionName" required placeholder="e.g. twoSum"></div>
+          <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="probTags" placeholder="e.g. array, string"></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="probDescription" rows="4" required></textarea></div>
+        <div class="form-group"><label>Starter code</label><textarea id="probStarterCode" rows="3" class="mono" placeholder="function twoSum(nums, target) {\n  \n}"></textarea></div>
+
+        <h4 class="mt-16 mb-8">Test cases</h4>
+        <p class="text-muted mb-8" style="font-size:0.8rem">Input must be valid JSON array of arguments, e.g. <span class="mono">[[2,7,11,15], 9]</span>. Expected output must be valid JSON, e.g. <span class="mono">[0,1]</span> or <span class="mono">true</span> or <span class="mono">"olleh"</span>.</p>
+        <div id="testCasesContainer"></div>
+        <button type="button" class="btn btn-outline btn-block mt-8" id="addTestCaseBtn">+ Add test case</button>
+        <button type="submit" class="btn btn-primary btn-block mt-16" id="codingSubmitBtn">Create problem</button>
+      </form>
+    `;
+  }
+
+  function addTestCaseRow() {
+    const idx = testCaseCount++;
+    const wrap = document.createElement('div');
+    wrap.className = 'card mt-16';
+    wrap.style.padding = '18px';
+    wrap.innerHTML = `
+      <div class="flex-between mb-8">
+        <span style="font-weight:600;font-size:0.85rem">Test case ${idx + 1}</span>
+        <button type="button" class="btn btn-ghost btn-sm remove-tc">Remove</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><input type="text" placeholder='Input, e.g. [[2,7,11,15], 9]' class="tc-input mono" required></div>
+        <div class="form-group"><input type="text" placeholder='Expected output, e.g. [0,1]' class="tc-output mono" required></div>
+      </div>
+      <label style="font-size:0.8rem;display:flex;align-items:center;gap:6px"><input type="checkbox" class="tc-hidden"> Hidden test case (used only on Submit, not shown to student)</label>
+    `;
+    wrap.querySelector('.remove-tc').addEventListener('click', () => wrap.remove());
+    document.getElementById('testCasesContainer').appendChild(wrap);
+  }
+
+  function wireCodingForm() {
+    testCaseCount = 0;
+    document.getElementById('testCasesContainer').innerHTML = '';
+    addTestCaseRow();
+    addTestCaseRow();
+    document.getElementById('addTestCaseBtn').addEventListener('click', addTestCaseRow);
+
+    document.getElementById('codingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rows = document.querySelectorAll('#testCasesContainer > div');
+      if (!rows.length) { Toast.show('Add at least one test case', 'error'); return; }
+
+      let testCases;
+      try {
+        testCases = Array.from(rows).map(row => ({
+          input: JSON.parse(row.querySelector('.tc-input').value),
+          expectedOutput: JSON.parse(row.querySelector('.tc-output').value),
+          isHidden: row.querySelector('.tc-hidden').checked
+        }));
+      } catch (err) {
+        showAlert(document.getElementById('alertBox'), 'Test case input/output must be valid JSON (check commas, quotes and brackets).');
+        return;
+      }
+
+      const btn = document.getElementById('codingSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      try {
+        await apiRequest('/coding', {
+          method: 'POST',
+          body: {
+            title: document.getElementById('probTitle').value,
+            difficulty: document.getElementById('probDifficulty').value,
+            functionName: document.getElementById('probFunctionName').value,
+            tags: document.getElementById('probTags').value,
+            description: document.getElementById('probDescription').value,
+            starterCode: document.getElementById('probStarterCode').value,
+            testCases
+          }
+        });
+        Toast.show('Coding problem created', 'success');
+        renderTab();
+      } catch (err) {
+        showAlert(document.getElementById('alertBox'), err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create problem';
+      }
+    });
+  }
+
+  // ============ Manage lists ============
+  async function renderQuizList() {
+    const el = document.getElementById('tabContent');
+    el.innerHTML = '<div class="spinner"></div>';
+    try {
+      const { quizzes } = await apiRequest('/quizzes');
+      el.innerHTML = quizzes.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Title</th><th>Subject</th><th>Questions</th><th>Duration</th><th></th></tr></thead>
+            <tbody>
+              ${quizzes.map(q => `
+                <tr>
+                  <td style="font-weight:600">${escapeHtml(q.title)}</td>
+                  <td>${escapeHtml(q.subject)}</td>
+                  <td>${q.questionCount}</td>
+                  <td>${q.durationMinutes} min</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="deleteQuiz('${q._id}')">Delete</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : `<div class="empty-state"><div class="icon">📝</div><h3>No quizzes yet</h3></div>`;
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  async function deleteQuiz(id) {
+    if (!confirm('Delete this quiz permanently?')) return;
+    try { await apiRequest(`/quizzes/${id}`, { method: 'DELETE' }); Toast.show('Quiz deleted', 'success'); renderQuizList(); }
+    catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  async function renderCodingList() {
+    const el = document.getElementById('tabContent');
+    el.innerHTML = '<div class="spinner"></div>';
+    try {
+      const { problems } = await apiRequest('/coding');
+      el.innerHTML = problems.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Title</th><th>Difficulty</th><th>Tags</th><th></th></tr></thead>
+            <tbody>
+              ${problems.map(p => `
+                <tr>
+                  <td style="font-weight:600">${escapeHtml(p.title)}</td>
+                  <td>${escapeHtml(p.difficulty)}</td>
+                  <td>${(p.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join(' ')}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="deleteProblem('${p._id}')">Delete</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : `<div class="empty-state"><div class="icon">💻</div><h3>No coding problems yet</h3></div>`;
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  async function deleteProblem(id) {
+    if (!confirm('Delete this problem permanently?')) return;
+    try { await apiRequest(`/coding/${id}`, { method: 'DELETE' }); Toast.show('Problem deleted', 'success'); renderCodingList(); }
+    catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  function renderTab() {
+    const el = document.getElementById('tabContent');
+    if (activeTab === 'quiz-new') { el.innerHTML = newQuizFormHtml(); wireQuizForm(); }
+    else if (activeTab === 'coding-new') { el.innerHTML = newCodingFormHtml(); wireCodingForm(); }
+    else if (activeTab === 'quiz-list') { renderQuizList(); }
+    else if (activeTab === 'coding-list') { renderCodingList(); }
+  }
+
+  renderTab();
+</script>
+</body>
+</html>

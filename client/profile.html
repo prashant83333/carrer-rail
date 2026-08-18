@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section style="background:var(--navy-950);padding:40px 0 30px">
+  <div class="container">
+    <h1 style="color:#fff;font-size:1.8rem">My profile</h1>
+    <p style="color:rgba(255,255,255,0.6);margin-top:6px" id="roleSub"></p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:40px">
+  <div class="container" style="max-width:720px">
+    <div id="alertBox" class="alert alert-success"></div>
+
+    <div class="card" style="padding:28px" id="resumeCardWrap"></div>
+
+    <div class="card mt-24" style="padding:28px">
+      <h3 class="mb-16">Profile details</h3>
+      <form id="profileForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full name</label>
+            <input type="text" id="name" required>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="phone">
+          </div>
+        </div>
+
+        <div id="userFields">
+          <div class="form-row">
+            <div class="form-group">
+              <label>College</label>
+              <input type="text" id="college">
+            </div>
+            <div class="form-group">
+              <label>Branch</label>
+              <input type="text" id="branch">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Graduation year</label>
+            <input type="text" id="graduationYear" placeholder="e.g. 2026">
+          </div>
+          <div class="form-group">
+            <label>Skills (comma separated)</label>
+            <input type="text" id="skills" placeholder="e.g. React, Node.js, SQL">
+          </div>
+        </div>
+
+        <div id="recruiterFields" style="display:none">
+          <div class="form-group">
+            <label>Company name</label>
+            <input type="text" id="companyName">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Designation</label>
+              <input type="text" id="designation">
+            </div>
+            <div class="form-group">
+              <label>Company website</label>
+              <input type="text" id="companyWebsite">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Short bio</label>
+          <textarea id="bio" rows="3" placeholder="A line or two about yourself"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="saveBtn">Save changes</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('profile');
+  const user = Auth.requireRole(['user', 'recruiter', 'admin']);
+
+  document.getElementById('roleSub').textContent =
+    user.role === 'recruiter' ? 'Manage your recruiter profile' : 'Manage your job-seeker profile and resume';
+
+  document.getElementById('userFields').style.display = user.role === 'user' ? 'block' : 'none';
+  document.getElementById('recruiterFields').style.display = user.role === 'recruiter' ? 'block' : 'none';
+
+  function fillForm(u) {
+    document.getElementById('name').value = u.name || '';
+    document.getElementById('phone').value = u.phone || '';
+    document.getElementById('college').value = u.college || '';
+    document.getElementById('branch').value = u.branch || '';
+    document.getElementById('graduationYear').value = u.graduationYear || '';
+    document.getElementById('skills').value = (u.skills || []).join(', ');
+    document.getElementById('companyName').value = u.companyName || '';
+    document.getElementById('designation').value = u.designation || '';
+    document.getElementById('companyWebsite').value = u.companyWebsite || '';
+    document.getElementById('bio').value = u.bio || '';
+  }
+
+  function renderResumeCard(u) {
+    const wrap = document.getElementById('resumeCardWrap');
+    if (user.role !== 'user') { wrap.style.display = 'none'; return; }
+    wrap.innerHTML = `
+      <h3 class="mb-8">Resume</h3>
+      <p class="text-muted mb-16" style="font-size:0.88rem">Upload a PDF or Word file — this is what gets sent when you apply to a job.</p>
+      ${u.resumeUrl
+        ? `<div class="flex-between" style="background:var(--cream-100);padding:14px 16px;border-radius:10px">
+             <span>📄 ${escapeHtml(u.resumeOriginalName || 'Resume uploaded')}</span>
+             <a href="${u.resumeUrl}" target="_blank" class="btn btn-ghost btn-sm">View</a>
+           </div>`
+        : `<div class="empty-state" style="padding:24px"><div class="icon">📄</div><p>No resume uploaded yet</p></div>`
+      }
+      <div class="form-group mt-16">
+        <input type="file" id="resumeFile" accept=".pdf,.doc,.docx">
+      </div>
+      <button class="btn btn-primary" id="uploadResumeBtn">Upload / Replace resume</button>
+    `;
+    document.getElementById('uploadResumeBtn').addEventListener('click', uploadResume);
+  }
+
+  async function uploadResume() {
+    const fileInput = document.getElementById('resumeFile');
+    if (!fileInput.files.length) { Toast.show('Please choose a file first', 'error'); return; }
+    const formData = new FormData();
+    formData.append('resume', fileInput.files[0]);
+    const btn = document.getElementById('uploadResumeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Uploading...';
+    try {
+      const data = await apiRequest('/upload/resume', { method: 'POST', body: formData, isForm: true });
+      const updatedUser = { ...user, resumeUrl: data.resumeUrl };
+      Auth.setSession(Auth.getToken(), updatedUser);
+      showAlert(document.getElementById('alertBox'), 'Resume uploaded successfully', 'success');
+      loadProfile();
+    } catch (err) {
+      Toast.show(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Upload / Replace resume';
+    }
+  }
+
+  async function loadProfile() {
+    const { user: freshUser } = await apiRequest('/auth/me');
+    Auth.setSession(Auth.getToken(), freshUser);
+    fillForm(freshUser);
+    renderResumeCard(freshUser);
+  }
+
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+      const body = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        bio: document.getElementById('bio').value
+      };
+      if (user.role === 'user') {
+        body.college = document.getElementById('college').value;
+        body.branch = document.getElementById('branch').value;
+        body.graduationYear = document.getElementById('graduationYear').value;
+        body.skills = document.getElementById('skills').value.split(',').map(s => s.trim()).filter(Boolean);
+      } else if (user.role === 'recruiter') {
+        body.companyName = document.getElementById('companyName').value;
+        body.designation = document.getElementById('designation').value;
+        body.companyWebsite = document.getElementById('companyWebsite').value;
+      }
+      const data = await apiRequest('/auth/profile', { method: 'PUT', body });
+      Auth.setSession(Auth.getToken(), data.user);
+      showAlert(document.getElementById('alertBox'), 'Profile updated successfully', 'success');
+    } catch (err) {
+      Toast.show(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save changes';
+    }
+  });
+
+  loadProfile();
+</script>
+</body>
+</html>

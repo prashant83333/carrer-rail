@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz History — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section style="background:var(--navy-950);padding:40px 0 30px">
+  <div class="container">
+    <h1 style="color:#fff;font-size:1.8rem">My quiz history</h1>
+    <p style="color:rgba(255,255,255,0.6);margin-top:6px">Every quiz you've attempted, with your score.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div id="content"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('quizzes');
+  if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+
+  async function loadHistory() {
+    const el = document.getElementById('content');
+    try {
+      const { attempts } = await apiRequest('/quizzes/attempts/mine');
+      if (!attempts.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📝</div><h3>No quiz attempts yet</h3><a href="quizzes.html" class="btn btn-primary mt-16">Browse quizzes</a></div>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Quiz</th><th>Subject</th><th>Score</th><th>Attempted</th></tr></thead>
+            <tbody>
+              ${attempts.map(a => `
+                <tr>
+                  <td style="font-weight:600">${a.quiz ? escapeHtml(a.quiz.title) : 'Deleted quiz'}</td>
+                  <td>${a.quiz ? escapeHtml(a.quiz.subject) : '—'}</td>
+                  <td class="mono">${a.score}/${a.totalQuestions}</td>
+                  <td>${timeAgo(a.createdAt)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>

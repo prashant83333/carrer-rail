@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Practice — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section style="background:var(--navy-950);padding:40px 0 30px">
+  <div class="container">
+    <h1 style="color:#fff;font-size:1.8rem">Coding practice</h1>
+    <p style="color:rgba(255,255,255,0.6);margin-top:6px">Solve problems in an in-browser JavaScript editor and get instant feedback.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="search-bar" style="box-shadow:var(--shadow-sm);margin-bottom:28px;max-width:none">
+      <input type="text" id="searchQ" placeholder="Search by title or tag (e.g. array, string)">
+      <select id="difficultyFilter">
+        <option value="">All difficulties</option>
+        <option value="Easy">Easy</option>
+        <option value="Medium">Medium</option>
+        <option value="Hard">Hard</option>
+      </select>
+      <button class="btn btn-primary" id="searchBtn">Search</button>
+    </div>
+
+    <div id="problemsList"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('coding');
+
+  function difficultyTag(d) {
+    const cls = d === 'Easy' ? 'tag-teal' : d === 'Hard' ? 'tag' : 'tag-amber';
+    return `<span class="tag ${cls}">${d}</span>`;
+  }
+
+  async function loadProblems() {
+    const el = document.getElementById('problemsList');
+    el.innerHTML = '<div class="spinner"></div>';
+    const q = document.getElementById('searchQ').value.trim();
+    const difficulty = document.getElementById('difficultyFilter').value;
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (difficulty) params.set('difficulty', difficulty);
+
+    try {
+      const { problems } = await apiRequest(`/coding?${params.toString()}`);
+      if (!problems.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">💻</div><h3>No problems found</h3><p>Try a different search or check back soon — an admin can add more from the admin panel.</p></div>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Title</th><th>Difficulty</th><th>Tags</th><th></th></tr></thead>
+            <tbody>
+              ${problems.map(p => `
+                <tr>
+                  <td style="font-weight:600">${escapeHtml(p.title)}</td>
+                  <td>${difficultyTag(p.difficulty)}</td>
+                  <td>${(p.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join(' ')}</td>
+                  <td><a href="coding-problem.html?id=${p._id}" class="btn btn-outline btn-sm">Solve →</a></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', loadProblems);
+  document.getElementById('searchQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadProblems(); });
+  document.getElementById('difficultyFilter').addEventListener('change', loadProblems);
+
+  loadProblems();
+</script>
+</body>
+</html>

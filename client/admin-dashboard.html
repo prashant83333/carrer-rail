@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section class="dash-header">
+  <div class="container">
+    <h1>Admin dashboard</h1>
+    <p>Platform-wide overview of users, jobs and activity.</p>
+  </div>
+</section>
+
+<div class="container">
+  <div class="stat-strip">
+    <div class="stat-card"><div class="num" id="statUsers">—</div><div class="label">Job seekers</div></div>
+    <div class="stat-card"><div class="num teal" id="statRecruiters">—</div><div class="label">Recruiters</div></div>
+    <div class="stat-card"><div class="num amber" id="statJobs">—</div><div class="label">Jobs posted</div></div>
+    <div class="stat-card"><div class="num" id="statApplications">—</div><div class="label">Applications</div></div>
+  </div>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="dash-tabs">
+      <div class="dash-tab active" data-tab="jobs">Manage jobs</div>
+      <div class="dash-tab" data-tab="users">Job seekers</div>
+      <div class="dash-tab" data-tab="recruiters">Recruiters</div>
+    </div>
+    <div id="tabContent"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('dash');
+  Auth.requireRole(['admin']);
+
+  async function loadStats() {
+    try {
+      const s = await apiRequest('/admin/stats');
+      document.getElementById('statUsers').textContent = s.totalUsers;
+      document.getElementById('statRecruiters').textContent = s.totalRecruiters;
+      document.getElementById('statJobs').textContent = s.totalJobs;
+      document.getElementById('statApplications').textContent = s.totalApplications;
+    } catch (err) { console.error(err); }
+  }
+
+  let activeTab = 'jobs';
+  document.querySelectorAll('.dash-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      loadTab();
+    });
+  });
+
+  async function loadTab() {
+    const el = document.getElementById('tabContent');
+    el.innerHTML = '<div class="spinner"></div>';
+    try {
+      if (activeTab === 'jobs') {
+        const { jobs } = await apiRequest('/admin/jobs');
+        el.innerHTML = jobs.length ? `
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Title</th><th>Company</th><th>Posted by</th><th>Status</th><th>Approval</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${jobs.map(j => `
+                  <tr>
+                    <td style="font-weight:600">${escapeHtml(j.title)}</td>
+                    <td>${escapeHtml(j.company)}</td>
+                    <td>${j.postedBy ? escapeHtml(j.postedBy.name) : '—'}</td>
+                    <td>${j.isActive ? '<span class="status-pill status-Selected">Active</span>' : '<span class="status-pill status-Rejected">Closed</span>'}</td>
+                    <td>${j.isApproved ? '<span class="status-pill status-Shortlisted">Approved</span>' : '<span class="status-pill status-Interview">Suspended</span>'}</td>
+                    <td class="flex gap-8">
+                      <button class="btn btn-outline btn-sm" onclick="toggleApproval('${j._id}')">${j.isApproved ? 'Suspend' : 'Approve'}</button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteJob('${j._id}')">Delete</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>` : `<div class="empty-state"><div class="icon">🗂️</div><h3>No jobs posted yet</h3></div>`;
+      } else {
+        const role = activeTab === 'users' ? 'user' : 'recruiter';
+        const { users } = await apiRequest(`/admin/users?role=${role}`);
+        el.innerHTML = users.length ? `
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>${role === 'user' ? 'College' : 'Company'}</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${users.map(u => `
+                  <tr>
+                    <td style="font-weight:600">${escapeHtml(u.name)}</td>
+                    <td>${escapeHtml(u.email)}</td>
+                    <td>${escapeHtml(role === 'user' ? (u.college || '—') : (u.companyName || '—'))}</td>
+                    <td>${u.isBlocked ? '<span class="status-pill status-Rejected">Blocked</span>' : '<span class="status-pill status-Selected">Active</span>'}</td>
+                    <td><button class="btn btn-outline btn-sm" onclick="toggleBlock('${u._id}')">${u.isBlocked ? 'Unblock' : 'Block'}</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>` : `<div class="empty-state"><div class="icon">👥</div><h3>No ${role}s registered yet</h3></div>`;
+      }
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  async function toggleApproval(id) {
+    try { await apiRequest(`/admin/jobs/${id}/toggle`, { method: 'PUT' }); loadTab(); }
+    catch (err) { Toast.show(err.message, 'error'); }
+  }
+  async function deleteJob(id) {
+    if (!confirm('Delete this job permanently?')) return;
+    try { await apiRequest(`/admin/jobs/${id}`, { method: 'DELETE' }); loadTab(); loadStats(); }
+    catch (err) { Toast.show(err.message, 'error'); }
+  }
+  async function toggleBlock(id) {
+    try { await apiRequest(`/admin/users/${id}/block`, { method: 'PUT' }); loadTab(); }
+    catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  loadStats();
+  loadTab();
+</script>
+</body>
+</html>

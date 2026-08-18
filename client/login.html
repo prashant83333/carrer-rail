@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p class="sub">Log in to continue to your dashboard.</p>
+
+    <div id="alertBox" class="alert alert-error"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Log in</button>
+    </form>
+
+    <p class="auth-foot">Don't have an account? <a href="signup.html">Sign up</a></p>
+    <p class="auth-foot" style="margin-top:6px;font-size:0.78rem">Admin demo: admin@jobportal.com / Admin@123</p>
+  </div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('');
+  if (Auth.isLoggedIn()) redirectByRole(Auth.getUser().role);
+
+  function redirectByRole(role) {
+    if (role === 'recruiter') window.location.href = 'recruiter-dashboard.html';
+    else if (role === 'admin') window.location.href = 'admin-dashboard.html';
+    else window.location.href = 'jobs.html';
+  }
+
+  const alertBox = document.getElementById('alertBox');
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    try {
+      const data = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: {
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        }
+      });
+      Auth.setSession(data.token, data.user);
+      redirectByRole(data.user.role);
+    } catch (err) {
+      showAlert(alertBox, err.message);
+      btn.disabled = false;
+      btn.textContent = 'Log in';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Details — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<div class="container" style="padding-top:40px;padding-bottom:70px">
+  <div id="content"><div class="spinner"></div></div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom">© 2026 CareerRail. Built for students &amp; recruiters.</div>
+  </div>
+</footer>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('jobs');
+
+  const jobId = new URLSearchParams(window.location.search).get('id');
+  const content = document.getElementById('content');
+
+  async function loadJob() {
+    if (!jobId) { content.innerHTML = '<p>Job not found.</p>'; return; }
+    try {
+      const { job } = await apiRequest(`/jobs/${jobId}`);
+      render(job);
+    } catch (err) {
+      content.innerHTML = `<div class="empty-state"><div class="icon">😕</div><h3>Job not found</h3><p>${escapeHtml(err.message)}</p></div>`;
+    }
+  }
+
+  function render(job) {
+    const user = Auth.getUser();
+    const isJobSeeker = user && user.role === 'user';
+
+    content.innerHTML = `
+      <a href="jobs.html" class="text-muted" style="font-size:0.88rem">← Back to all jobs</a>
+      <div class="card mt-16" style="padding:36px">
+        <div class="flex-between" style="align-items:flex-start;flex-wrap:wrap;gap:20px">
+          <div class="flex gap-16">
+            <div class="job-logo" style="width:60px;height:60px;font-size:1.4rem">${escapeHtml(job.company.charAt(0))}</div>
+            <div>
+              <h1 style="font-size:1.6rem">${escapeHtml(job.title)}</h1>
+              <p class="text-muted mt-8">${escapeHtml(job.company)} · ${escapeHtml(job.location)}</p>
+            </div>
+          </div>
+          <div class="flex gap-8" id="applyArea"></div>
+        </div>
+
+        <div class="job-tags mt-24">
+          <span class="tag tag-teal">${escapeHtml(job.jobType)}</span>
+          <span class="tag">${escapeHtml(job.workMode)}</span>
+          <span class="tag tag-amber">${escapeHtml(job.experience)}</span>
+          <span class="tag">${escapeHtml(job.category)}</span>
+        </div>
+
+        <div class="grid grid-3 mt-24" style="gap:14px">
+          <div class="card" style="padding:16px"><div class="text-muted" style="font-size:0.8rem">Salary</div><div class="job-salary mt-8">${formatSalary(job.minSalary, job.maxSalary)}</div></div>
+          <div class="card" style="padding:16px"><div class="text-muted" style="font-size:0.8rem">Openings</div><div style="font-weight:600" class="mt-8">${job.openings}</div></div>
+          <div class="card" style="padding:16px"><div class="text-muted" style="font-size:0.8rem">Deadline</div><div style="font-weight:600" class="mt-8">${job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString() : 'Rolling'}</div></div>
+        </div>
+
+        <h3 class="mt-32 mb-8">Job description</h3>
+        <p style="white-space:pre-line;color:var(--ink-700)">${escapeHtml(job.description)}</p>
+
+        ${job.responsibilities && job.responsibilities.length ? `
+          <h3 class="mt-24 mb-8">Responsibilities</h3>
+          <ul style="padding-left:20px;list-style:disc;color:var(--ink-700)">
+            ${job.responsibilities.map(r => `<li class="mt-8">${escapeHtml(r)}</li>`).join('')}
+          </ul>` : ''}
+
+        ${job.skillsRequired && job.skillsRequired.length ? `
+          <h3 class="mt-24 mb-8">Skills required</h3>
+          <div class="job-tags">${job.skillsRequired.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+      </div>
+    `;
+
+    const applyArea = document.getElementById('applyArea');
+    if (!user) {
+      applyArea.innerHTML = `<a href="login.html" class="btn btn-primary">Log in to apply</a>`;
+    } else if (isJobSeeker) {
+      const isSaved = (user.savedJobs || []).some((j) => String(j) === String(job._id) || String(j._id) === String(job._id));
+      applyArea.innerHTML = `
+        <button class="btn btn-primary" id="applyBtn">Apply now</button>
+        <button class="btn btn-outline" id="saveBtn" title="Save job">${isSaved ? '❤️ Saved' : '🤍 Save'}</button>
+      `;
+      document.getElementById('applyBtn').addEventListener('click', () => applyToJob(job._id));
+      document.getElementById('saveBtn').addEventListener('click', () => toggleSave(job._id));
+    } else {
+      applyArea.innerHTML = `<span class="text-muted" style="font-size:0.85rem">Only job seeker accounts can apply</span>`;
+    }
+  }
+
+  async function toggleSave(id) {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    try {
+      const data = await apiRequest(`/jobs/${id}/save`, { method: 'POST' });
+      const updatedUser = { ...Auth.getUser(), savedJobs: data.savedJobs };
+      Auth.setSession(Auth.getToken(), updatedUser);
+      btn.textContent = data.saved ? '❤️ Saved' : '🤍 Save';
+      Toast.show(data.saved ? 'Job saved' : 'Removed from saved jobs', 'success');
+    } catch (err) {
+      Toast.show(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function applyToJob(id) {
+    const user = Auth.getUser();
+    if (!user.resumeUrl) {
+      if (confirm('You need to upload a resume before applying. Go to your profile now?')) {
+        window.location.href = 'profile.html';
+      }
+      return;
+    }
+    const btn = document.getElementById('applyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Applying...';
+    try {
+      await apiRequest(`/applications/${id}`, { method: 'POST', body: {} });
+      btn.textContent = 'Applied ✓';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-outline');
+    } catch (err) {
+      Toast.show(err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Apply now';
+    }
+  }
+
+  loadJob();
+</script>
+</body>
+</html>

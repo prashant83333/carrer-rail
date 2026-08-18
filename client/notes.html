@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Notes — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section style="background:var(--navy-950);padding:40px 0 30px">
+  <div class="container flex-between" style="flex-wrap:wrap;gap:16px">
+    <div>
+      <h1 style="color:#fff;font-size:1.8rem">Study notes</h1>
+      <p style="color:rgba(255,255,255,0.6);margin-top:6px">Search and read PDF notes uploaded for your subjects.</p>
+    </div>
+    <button class="btn btn-amber" id="uploadOpenBtn" style="display:none">+ Upload note</button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="search-bar" style="box-shadow:var(--shadow-sm);margin-bottom:28px;max-width:none">
+      <input type="text" id="searchQ" placeholder="Search by title, subject or tag">
+      <select id="subjectFilter"><option value="">All subjects</option></select>
+      <button class="btn btn-primary" id="searchBtn">Search</button>
+    </div>
+    <div id="notesGrid"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<!-- PDF viewer modal -->
+<div class="modal-overlay" id="pdfModal">
+  <div class="modal-box" style="max-width:900px;padding:0;overflow:hidden">
+    <div class="flex-between" style="padding:16px 20px;border-bottom:1px solid var(--line)">
+      <h3 id="pdfModalTitle" style="font-size:1rem">Note</h3>
+      <div class="flex gap-8">
+        <a id="pdfDownloadLink" href="#" target="_blank" class="btn btn-outline btn-sm">Open in new tab</a>
+        <button class="modal-close" id="closePdfModal" style="float:none">×</button>
+      </div>
+    </div>
+    <iframe id="pdfFrame" src="" style="width:100%;height:70vh;border:none"></iframe>
+  </div>
+</div>
+
+<!-- Upload modal (admin only) -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeUploadModal">×</button>
+    <h3 class="mb-16">Upload a note (PDF)</h3>
+    <form id="uploadForm">
+      <div class="form-group"><label>Title</label><input type="text" id="noteTitle" required></div>
+      <div class="form-group"><label>Subject</label><input type="text" id="noteSubject" required placeholder="e.g. Data Structures"></div>
+      <div class="form-group"><label>Description</label><textarea id="noteDescription" rows="2"></textarea></div>
+      <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="noteTags" placeholder="e.g. trees, graphs, unit-3"></div>
+      <div class="form-group"><label>PDF file (max 20MB)</label><input type="file" id="noteFile" accept="application/pdf" required></div>
+      <button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">Upload</button>
+    </form>
+  </div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('notes');
+  const user = Auth.getUser();
+  const isAdmin = user && user.role === 'admin';
+  if (isAdmin) document.getElementById('uploadOpenBtn').style.display = 'inline-flex';
+
+  async function loadSubjects() {
+    try {
+      const { subjects } = await apiRequest('/notes/subjects');
+      const sel = document.getElementById('subjectFilter');
+      subjects.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        sel.appendChild(opt);
+      });
+    } catch (err) { /* non-critical */ }
+  }
+
+  async function loadNotes() {
+    const el = document.getElementById('notesGrid');
+    el.innerHTML = '<div class="spinner"></div>';
+    const q = document.getElementById('searchQ').value.trim();
+    const subject = document.getElementById('subjectFilter').value;
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (subject) params.set('subject', subject);
+
+    try {
+      const { notes } = await apiRequest(`/notes?${params.toString()}`);
+      if (!notes.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📚</div><h3>No notes found</h3><p>${isAdmin ? 'Upload the first one using the button above.' : 'Check back soon, or ask an admin to upload notes for your subject.'}</p></div>`;
+        return;
+      }
+      el.innerHTML = `<div class="grid grid-3">${notes.map(noteCardHtml).join('')}</div>`;
+    } catch (err) {
+      el.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  function noteCardHtml(note) {
+    return `
+      <div class="card">
+        <div class="flex gap-12 mb-12">
+          <div class="job-logo" style="background:var(--amber-400);color:var(--navy-950)">📄</div>
+          <div>
+            <div style="font-weight:600;font-size:0.98rem">${escapeHtml(note.title)}</div>
+            <div class="text-muted" style="font-size:0.8rem">${escapeHtml(note.subject)}</div>
+          </div>
+        </div>
+        ${note.description ? `<p class="text-muted" style="font-size:0.85rem;margin-bottom:12px">${escapeHtml(note.description)}</p>` : ''}
+        ${note.tags && note.tags.length ? `<div class="job-tags mb-12">${note.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        <div class="flex-between">
+          <span class="text-muted" style="font-size:0.76rem">${note.downloadCount || 0} views</span>
+          <div class="flex gap-8">
+            ${isAdmin ? `<button class="btn btn-ghost btn-sm" onclick="deleteNote('${note._id}')">Delete</button>` : ''}
+            <button class="btn btn-primary btn-sm" onclick="openNote('${note._id}', '${note.fileUrl}', '${escapeHtml(note.title).replace(/'/g, "\\'")}')">Read →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const pdfModal = document.getElementById('pdfModal');
+  document.getElementById('closePdfModal').addEventListener('click', () => {
+    pdfModal.classList.remove('show');
+    document.getElementById('pdfFrame').src = '';
+  });
+
+  async function openNote(id, fileUrl, title) {
+    document.getElementById('pdfModalTitle').textContent = title;
+    document.getElementById('pdfFrame').src = fileUrl;
+    document.getElementById('pdfDownloadLink').href = fileUrl;
+    pdfModal.classList.add('show');
+    try { await apiRequest(`/notes/${id}/download`, { method: 'POST' }); } catch (e) { /* non-critical */ }
+  }
+
+  async function deleteNote(id) {
+    if (!confirm('Delete this note permanently?')) return;
+    try {
+      await apiRequest(`/notes/${id}`, { method: 'DELETE' });
+      Toast.show('Note deleted', 'success');
+      loadNotes();
+    } catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  // Upload modal wiring (admin only)
+  const uploadModal = document.getElementById('uploadModal');
+  document.getElementById('uploadOpenBtn')?.addEventListener('click', () => uploadModal.classList.add('show'));
+  document.getElementById('closeUploadModal').addEventListener('click', () => uploadModal.classList.remove('show'));
+
+  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('noteFile');
+    if (!fileInput.files.length) { Toast.show('Please choose a PDF file', 'error'); return; }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('title', document.getElementById('noteTitle').value);
+    formData.append('subject', document.getElementById('noteSubject').value);
+    formData.append('description', document.getElementById('noteDescription').value);
+    formData.append('tags', document.getElementById('noteTags').value);
+
+    const btn = document.getElementById('uploadSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Uploading...';
+    try {
+      await apiRequest('/notes', { method: 'POST', body: formData, isForm: true });
+      Toast.show('Note uploaded', 'success');
+      uploadModal.classList.remove('show');
+      document.getElementById('uploadForm').reset();
+      loadNotes();
+      loadSubjects();
+    } catch (err) {
+      Toast.show(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Upload';
+    }
+  });
+
+  document.getElementById('searchBtn').addEventListener('click', loadNotes);
+  document.getElementById('searchQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadNotes(); });
+  document.getElementById('subjectFilter').addEventListener('change', loadNotes);
+
+  loadSubjects();
+  loadNotes();
+</script>
+</body>
+</html>

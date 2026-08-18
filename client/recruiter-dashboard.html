@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recruiter Dashboard — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section class="dash-header">
+  <div class="container flex-between" style="flex-wrap:wrap;gap:16px">
+    <div>
+      <h1>Recruiter dashboard</h1>
+      <p id="companyName"></p>
+    </div>
+    <a href="post-job.html" class="btn btn-amber">+ Post a new job</a>
+  </div>
+</section>
+
+<div class="container">
+  <div class="stat-strip">
+    <div class="stat-card"><div class="num" id="statTotalJobs">—</div><div class="label">Jobs posted</div></div>
+    <div class="stat-card"><div class="num teal" id="statActiveJobs">—</div><div class="label">Active jobs</div></div>
+    <div class="stat-card"><div class="num amber" id="statApplicants">—</div><div class="label">Total applicants</div></div>
+    <div class="stat-card"><div class="num" id="statSelected">—</div><div class="label">Candidates selected</div></div>
+  </div>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div id="jobsList"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<!-- Applicants Modal -->
+<div class="modal-overlay" id="applicantsModal">
+  <div class="modal-box" style="max-width:760px">
+    <button class="modal-close" id="closeModal">×</button>
+    <h3 id="modalJobTitle" class="mb-16">Applicants</h3>
+    <div id="applicantsList"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('dash');
+  const user = Auth.requireRole(['recruiter']);
+  document.getElementById('companyName').textContent = user.companyName ? `${user.companyName} · manage your postings and applicants` : 'Manage your postings and applicants';
+
+  async function loadDashboard() {
+    const jobsList = document.getElementById('jobsList');
+    try {
+      const { jobs } = await apiRequest('/jobs/recruiter/mine');
+
+      const totalJobs = jobs.length;
+      const activeJobs = jobs.filter(j => j.isActive).length;
+      const totalApplicants = jobs.reduce((sum, j) => sum + j.applicantCount, 0);
+
+      document.getElementById('statTotalJobs').textContent = totalJobs;
+      document.getElementById('statActiveJobs').textContent = activeJobs;
+      document.getElementById('statApplicants').textContent = totalApplicants;
+
+      try {
+        const { breakdown } = await apiRequest('/applications/recruiter/stats');
+        document.getElementById('statSelected').textContent = breakdown.Selected || 0;
+      } catch (e) {
+        document.getElementById('statSelected').textContent = '—';
+      }
+
+      if (!jobs.length) {
+        jobsList.innerHTML = `<div class="empty-state"><div class="icon">🗂️</div><h3>You haven't posted any jobs yet</h3><p>Post your first opening to start receiving applications.</p><a href="post-job.html" class="btn btn-primary mt-16">Post a job</a></div>`;
+        return;
+      }
+
+      jobsList.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Title</th><th>Location</th><th>Type</th><th>Applicants</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${jobs.map(j => `
+                <tr>
+                  <td style="font-weight:600">${escapeHtml(j.title)}</td>
+                  <td>${escapeHtml(j.location)}</td>
+                  <td>${escapeHtml(j.jobType)}</td>
+                  <td>${j.applicantCount}</td>
+                  <td>${j.isActive ? '<span class="status-pill status-Selected">Active</span>' : '<span class="status-pill status-Rejected">Closed</span>'}</td>
+                  <td class="flex gap-8">
+                    <button class="btn btn-outline btn-sm" onclick="viewApplicants('${j._id}', '${escapeHtml(j.title).replace(/'/g, "\\'")}')">Applicants</button>
+                    <button class="btn btn-ghost btn-sm" onclick="toggleJob('${j._id}', ${j.isActive})">${j.isActive ? 'Close' : 'Reopen'}</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteJob('${j._id}')">Delete</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (err) {
+      jobsList.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  async function toggleJob(id, isActive) {
+    try {
+      await apiRequest(`/jobs/${id}`, { method: 'PUT', body: { isActive: !isActive } });
+      loadDashboard();
+    } catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  async function deleteJob(id) {
+    if (!confirm('Delete this job posting? This cannot be undone.')) return;
+    try {
+      await apiRequest(`/jobs/${id}`, { method: 'DELETE' });
+      loadDashboard();
+    } catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  const modal = document.getElementById('applicantsModal');
+  document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('show'));
+
+  async function viewApplicants(jobId, title) {
+    modal.classList.add('show');
+    document.getElementById('modalJobTitle').textContent = `Applicants — ${title}`;
+    const list = document.getElementById('applicantsList');
+    list.innerHTML = '<div class="spinner"></div>';
+    try {
+      const { applications } = await apiRequest(`/applications/job/${jobId}`);
+      if (!applications.length) {
+        list.innerHTML = `<p class="text-muted">No applicants yet.</p>`;
+        return;
+      }
+      list.innerHTML = applications.map(a => `
+        <div class="card mb-16" style="padding:16px">
+          <div class="flex-between">
+            <div>
+              <div style="font-weight:600">${escapeHtml(a.applicant.name)}</div>
+              <div class="text-muted" style="font-size:0.85rem">${escapeHtml(a.applicant.email)} ${a.applicant.college ? '· ' + escapeHtml(a.applicant.college) : ''}</div>
+            </div>
+            <a href="${a.resumeUrl}" target="_blank" class="btn btn-ghost btn-sm">View resume</a>
+          </div>
+          ${a.applicant.skills && a.applicant.skills.length ? `<div class="job-tags mt-8">${a.applicant.skills.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+          <div class="flex-between mt-16">
+            <span class="status-pill status-${a.status}">${a.status}</span>
+            <select onchange="updateStatus('${a._id}', this.value, '${jobId}', '${title.replace(/'/g, "\\'")}')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--line)">
+              <option value="">Change status...</option>
+              <option value="Applied">Applied</option>
+              <option value="Shortlisted">Shortlisted</option>
+              <option value="Interview">Interview</option>
+              <option value="Selected">Selected</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      list.innerHTML = `<p class="text-muted">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  async function updateStatus(appId, status, jobId, title) {
+    if (!status) return;
+    try {
+      await apiRequest(`/applications/${appId}/status`, { method: 'PUT', body: { status } });
+      viewApplicants(jobId, title);
+    } catch (err) { Toast.show(err.message, 'error'); }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

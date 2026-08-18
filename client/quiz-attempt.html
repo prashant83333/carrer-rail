@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Take Quiz — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+<style>
+  .quiz-timer {
+    position: sticky; top: 84px;
+    background: var(--navy-950); color: var(--white);
+    padding: 12px 20px; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;
+    display: inline-flex; align-items: center; gap: 8px;
+    z-index: 10;
+  }
+  .quiz-timer.warn { background: #b91c1c; }
+  .option-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border: 1.5px solid var(--line); border-radius: 10px;
+    margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .option-row:hover { border-color: var(--teal-400); }
+  .option-row.selected { border-color: var(--teal-500); background: rgba(45,212,191,0.08); }
+  .option-row input { accent-color: var(--teal-500); width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<div class="container" style="padding-top:30px;padding-bottom:70px;max-width:760px">
+  <div id="content"><div class="spinner"></div></div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('quizzes');
+
+  const quizId = new URLSearchParams(window.location.search).get('id');
+  const content = document.getElementById('content');
+  let quiz = null;
+  let answers = [];
+  let timeLeft = 0;
+  let timerInterval = null;
+  let startTime = null;
+
+  async function loadQuiz() {
+    if (!Auth.isLoggedIn()) {
+      content.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><h3>Log in to take this quiz</h3><a href="login.html" class="btn btn-primary mt-16">Log in</a></div>`;
+      return;
+    }
+    try {
+      const data = await apiRequest(`/quizzes/${quizId}/start`);
+      quiz = data.quiz;
+      answers = new Array(quiz.questions.length).fill(-1);
+      timeLeft = quiz.durationMinutes * 60;
+      startTime = Date.now();
+      renderIntro();
+    } catch (err) {
+      content.innerHTML = `<div class="empty-state"><div class="icon">😕</div><h3>Quiz not found</h3></div>`;
+    }
+  }
+
+  function renderIntro() {
+    content.innerHTML = `
+      <div class="card text-center" style="padding:44px">
+        <span class="tag tag-teal" style="display:inline-block;margin-bottom:14px">${escapeHtml(quiz.subject)}</span>
+        <h1 style="font-size:1.6rem;margin-bottom:10px">${escapeHtml(quiz.title)}</h1>
+        <p class="text-muted mb-24">${escapeHtml(quiz.description || '')}</p>
+        <div class="grid grid-2" style="max-width:360px;margin:0 auto 30px;gap:14px">
+          <div class="card" style="padding:16px"><div class="text-muted" style="font-size:0.8rem">Questions</div><div style="font-weight:700;font-size:1.2rem">${quiz.questions.length}</div></div>
+          <div class="card" style="padding:16px"><div class="text-muted" style="font-size:0.8rem">Time limit</div><div style="font-weight:700;font-size:1.2rem">${quiz.durationMinutes} min</div></div>
+        </div>
+        <button class="btn btn-primary" id="startBtn">Start quiz</button>
+      </div>
+    `;
+    document.getElementById('startBtn').addEventListener('click', () => {
+      startTime = Date.now();
+      renderQuiz();
+      startTimer();
+    });
+  }
+
+  function renderQuiz() {
+    content.innerHTML = `
+      <div class="flex-between mb-24">
+        <div class="quiz-timer" id="timerBox">⏱ <span id="timerText">--:--</span></div>
+        <span class="text-muted" style="font-size:0.85rem" id="progressText"></span>
+      </div>
+      <div id="questionsWrap"></div>
+      <button class="btn btn-primary btn-block mt-16" id="submitQuizBtn">Submit quiz</button>
+    `;
+    renderQuestions();
+    document.getElementById('submitQuizBtn').addEventListener('click', () => submitQuiz(false));
+  }
+
+  function renderQuestions() {
+    const answered = answers.filter((a) => a !== -1).length;
+    document.getElementById('progressText').textContent = `${answered}/${quiz.questions.length} answered`;
+    document.getElementById('questionsWrap').innerHTML = quiz.questions.map((q, qi) => `
+      <div class="card mb-16" style="padding:22px">
+        <div style="font-weight:600;margin-bottom:14px">${qi + 1}. ${escapeHtml(q.questionText)}</div>
+        ${q.options.map((opt, oi) => `
+          <label class="option-row ${answers[qi] === oi ? 'selected' : ''}" onclick="selectAnswer(${qi}, ${oi})">
+            <input type="radio" name="q${qi}" ${answers[qi] === oi ? 'checked' : ''} readonly>
+            <span>${escapeHtml(opt)}</span>
+          </label>
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  function selectAnswer(qIdx, oIdx) {
+    answers[qIdx] = oIdx;
+    renderQuestions();
+  }
+
+  function startTimer() {
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      timeLeft -= 1;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        Toast.show("Time's up! Auto-submitting your quiz.", 'info');
+        submitQuiz(true);
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const box = document.getElementById('timerBox');
+    const text = document.getElementById('timerText');
+    if (!box || !text) return;
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    text.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    box.classList.toggle('warn', timeLeft <= 30);
+  }
+
+  async function submitQuiz(auto) {
+    clearInterval(timerInterval);
+    const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
+    try {
+      const data = await apiRequest(`/quizzes/${quizId}/submit`, {
+        method: 'POST',
+        body: { answers, timeTakenSeconds }
+      });
+      renderResults(data);
+    } catch (err) {
+      Toast.show(err.message, 'error');
+    }
+  }
+
+  function renderResults(data) {
+    const pct = Math.round((data.score / data.totalQuestions) * 100);
+    content.innerHTML = `
+      <div class="card text-center" style="padding:40px">
+        <div style="font-size:2.4rem;font-family:var(--font-display);font-weight:700;color:${pct >= 60 ? 'var(--teal-600)' : 'var(--danger)'}">${data.score}/${data.totalQuestions}</div>
+        <div class="text-muted mb-24">You scored ${pct}%</div>
+        <a href="quizzes.html" class="btn btn-outline btn-sm">Back to quizzes</a>
+      </div>
+      <h3 class="mt-32 mb-16">Review</h3>
+      ${data.review.map((r, i) => `
+        <div class="card mb-12" style="padding:18px;border-color:${r.isCorrect ? 'var(--teal-500)' : 'var(--danger)'}">
+          <div style="font-weight:600;margin-bottom:10px">${i + 1}. ${escapeHtml(r.questionText)}</div>
+          ${r.options.map((opt, oi) => {
+            let style = '';
+            if (oi === r.correctIndex) style = 'color:var(--teal-600);font-weight:700';
+            else if (oi === r.selectedIndex && !r.isCorrect) style = 'color:var(--danger);font-weight:700;text-decoration:line-through';
+            return `<div style="font-size:0.87rem;padding:4px 0;${style}">${oi === r.correctIndex ? '✓ ' : oi === r.selectedIndex ? '✕ ' : '· '}${escapeHtml(opt)}</div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+    `;
+  }
+
+  loadQuiz();
+</script>
+</body>
+</html>

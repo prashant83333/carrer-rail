@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solve Problem — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+<style>
+  .code-editor {
+    width: 100%;
+    min-height: 320px;
+    background: #0e1626;
+    color: #e6edf3;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    padding: 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--line);
+    resize: vertical;
+    tab-size: 2;
+  }
+  .result-row { padding: 12px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 8px; font-family: var(--font-mono); }
+  .result-pass { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .result-fail { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+</style>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<div class="container" style="padding-top:30px;padding-bottom:70px">
+  <a href="coding-practice.html" class="text-muted" style="font-size:0.88rem">← Back to all problems</a>
+  <div id="content" class="mt-16"><div class="spinner"></div></div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('coding');
+
+  const problemId = new URLSearchParams(window.location.search).get('id');
+  const content = document.getElementById('content');
+  let problem = null;
+
+  function difficultyTag(d) {
+    const cls = d === 'Easy' ? 'tag-teal' : d === 'Hard' ? 'tag' : 'tag-amber';
+    return `<span class="tag ${cls}">${d}</span>`;
+  }
+
+  async function loadProblem() {
+    if (!problemId) { content.innerHTML = '<p>Problem not found.</p>'; return; }
+    if (!Auth.isLoggedIn()) {
+      content.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><h3>Log in to solve this problem</h3><a href="login.html" class="btn btn-primary mt-16">Log in</a></div>`;
+      return;
+    }
+    try {
+      const data = await apiRequest(`/coding/${problemId}`);
+      problem = data.problem;
+      render();
+    } catch (err) {
+      content.innerHTML = `<div class="empty-state"><div class="icon">😕</div><h3>Problem not found</h3></div>`;
+    }
+  }
+
+  function render() {
+    content.innerHTML = `
+      <div class="grid grid-2" style="gap:30px;align-items:start">
+        <div class="card" style="padding:28px">
+          <div class="flex-between mb-8">
+            <h1 style="font-size:1.4rem">${escapeHtml(problem.title)}</h1>
+            ${difficultyTag(problem.difficulty)}
+          </div>
+          <div class="job-tags mb-16">${(problem.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+          <p style="white-space:pre-line;color:var(--ink-700);line-height:1.7">${escapeHtml(problem.description)}</p>
+
+          ${problem.examples && problem.examples.length ? problem.examples.map((ex, i) => `
+            <div class="card mt-16" style="padding:16px;background:var(--cream-100)">
+              <div style="font-weight:600;font-size:0.82rem;margin-bottom:6px">Example ${i + 1}</div>
+              <div class="mono" style="font-size:0.82rem"><b>Input:</b> ${escapeHtml(ex.input || '')}</div>
+              <div class="mono" style="font-size:0.82rem"><b>Output:</b> ${escapeHtml(ex.output || '')}</div>
+              ${ex.explanation ? `<div style="font-size:0.8rem;color:var(--ink-500);margin-top:6px">${escapeHtml(ex.explanation)}</div>` : ''}
+            </div>
+          `).join('') : ''}
+
+          ${problem.hiddenTestCount ? `<p class="text-muted mt-16" style="font-size:0.8rem">+ ${problem.hiddenTestCount} hidden test case(s) run on submit.</p>` : ''}
+        </div>
+
+        <div>
+          <div class="flex-between mb-8">
+            <span class="text-muted" style="font-size:0.85rem">Function to implement: <span class="mono" style="color:var(--navy-950);font-weight:600">${escapeHtml(problem.functionName)}</span></span>
+            <button class="btn btn-ghost btn-sm" id="resetBtn">Reset code</button>
+          </div>
+          <textarea id="codeEditor" class="code-editor" spellcheck="false">${escapeHtml(problem.starterCode || `function ${problem.functionName}() {\n  \n}`)}</textarea>
+          <div class="flex gap-12 mt-16">
+            <button class="btn btn-outline" id="runBtn">▶ Run (visible tests)</button>
+            <button class="btn btn-primary" id="submitBtn">Submit (all tests)</button>
+          </div>
+          <div id="resultsArea" class="mt-16"></div>
+        </div>
+      </div>
+    `;
+
+    const editor = document.getElementById('codeEditor');
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = editor.selectionStart, end = editor.selectionEnd;
+        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      editor.value = problem.starterCode || `function ${problem.functionName}() {\n  \n}`;
+    });
+    document.getElementById('runBtn').addEventListener('click', () => runCode(false));
+    document.getElementById('submitBtn').addEventListener('click', () => runCode(true));
+  }
+
+  async function runCode(isSubmit) {
+    const code = document.getElementById('codeEditor').value;
+    const btn = document.getElementById(isSubmit ? 'submitBtn' : 'runBtn');
+    const resultsArea = document.getElementById('resultsArea');
+    btn.disabled = true;
+    btn.textContent = isSubmit ? 'Submitting...' : 'Running...';
+    resultsArea.innerHTML = '<div class="spinner"></div>';
+
+    try {
+      const endpoint = isSubmit ? `/coding/${problemId}/submit` : `/coding/${problemId}/run`;
+      const data = await apiRequest(endpoint, { method: 'POST', body: { code } });
+
+      if (isSubmit) {
+        resultsArea.innerHTML = `
+          <div class="${data.allPassed ? 'result-pass' : 'result-fail'} result-row" style="font-size:0.95rem;font-weight:700">
+            ${data.allPassed ? '✓ All test cases passed!' : `✕ ${data.passedCount}/${data.total} test cases passed`}
+          </div>
+          ${data.results.map(r => `
+            <div class="result-row ${r.passed ? 'result-pass' : 'result-fail'}">
+              Test ${r.index + 1}${r.hidden ? ' (hidden)' : ''}: ${r.passed ? 'Passed ✓' : 'Failed ✕'}
+              ${!r.hidden && !r.passed ? `<br>Input: ${escapeHtml(JSON.stringify(r.input))} — Expected: ${escapeHtml(JSON.stringify(r.expected))}, Got: ${escapeHtml(JSON.stringify(r.actual))}${r.error ? ' — Error: ' + escapeHtml(r.error) : ''}` : ''}
+            </div>
+          `).join('')}
+        `;
+        if (data.allPassed) Toast.show('All test cases passed! 🎉', 'success');
+      } else {
+        resultsArea.innerHTML = `
+          <div class="${data.passedCount === data.total ? 'result-pass' : 'result-fail'} result-row" style="font-weight:700">
+            ${data.passedCount}/${data.total} visible test cases passed
+          </div>
+          ${data.results.map(r => `
+            <div class="result-row ${r.passed ? 'result-pass' : 'result-fail'}">
+              Test ${r.index + 1}: ${r.passed ? 'Passed ✓' : 'Failed ✕'}<br>
+              Input: ${escapeHtml(JSON.stringify(r.input))} — Expected: ${escapeHtml(JSON.stringify(r.expected))}, Got: ${escapeHtml(JSON.stringify(r.actual))}
+              ${r.error ? `<br>Error: ${escapeHtml(r.error)}` : ''}
+            </div>
+          `).join('')}
+        `;
+      }
+    } catch (err) {
+      resultsArea.innerHTML = `<div class="result-row result-fail">${escapeHtml(err.message)}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = isSubmit ? 'Submit (all tests)' : '▶ Run (visible tests)';
+    }
+  }
+
+  loadProblem();
+</script>
+</body>
+</html>

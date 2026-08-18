@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Placement Preparation — CareerRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar"></header>
+
+<section class="hero" style="padding:70px 0 60px">
+  <div class="container">
+    <span class="hero-eyebrow">● Placement preparation</span>
+    <h1 style="font-size:clamp(1.8rem, 4vw, 2.6rem)">Everything to prep for, before the offer letter.</h1>
+    <p class="lead">Six focused tracks covering aptitude, DSA, CS fundamentals, system design, HR rounds and resume building — plus company-wise interview patterns.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Preparation tracks</h2>
+        <p>Work through these in order, or jump to what you need most.</p>
+      </div>
+    </div>
+    <div class="grid grid-3" id="tracksGrid"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="studyModal">
+  <div class="modal-box" style="max-width:640px">
+    <button class="modal-close" id="closeStudyModal">×</button>
+    <span class="badge-role" id="studyModalTrack"></span>
+    <h3 class="mt-8 mb-16" id="studyModalTitle">Topic</h3>
+    <ul id="studyModalPoints" style="display:flex;flex-direction:column;gap:14px"></ul>
+  </div>
+</div>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:start;gap:40px">
+      <div>
+        <h2 class="mb-16" style="font-size:1.5rem">Mock interview tips</h2>
+        <div id="tipsList" class="card" style="padding:24px"><div class="spinner"></div></div>
+      </div>
+      <div>
+        <h2 class="mb-16" style="font-size:1.5rem">Company-wise interview pattern</h2>
+        <div class="table-wrap" id="companyTable"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section text-center">
+  <div class="container">
+    <h2 class="mb-16">Ready to put it into practice?</h2>
+    <p class="text-muted mb-24">Browse live openings and apply once you feel prepared.</p>
+    <a href="jobs.html" class="btn btn-primary">Browse jobs</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom">© 2026 CareerRail. Built for students &amp; recruiters.</div>
+  </div>
+</footer>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  renderNavbar('prep');
+
+  function prepIcon(name) {
+    const icons = { calculator: '🧮', code: '💻', layers: '🗄️', network: '🌐', users: '🗣️', file: '📄' };
+    return icons[name] || '📘';
+  }
+
+  let prepTracks = [];
+
+  async function loadPrep() {
+    try {
+      const data = await apiRequest('/prep');
+      prepTracks = data.tracks;
+
+      document.getElementById('tracksGrid').innerHTML = data.tracks.map((t, tIdx) => `
+        <div class="card prep-card">
+          <div class="prep-icon">${prepIcon(t.icon)}</div>
+          <h3>${escapeHtml(t.title)}</h3>
+          <p>${escapeHtml(t.description)}</p>
+          <ul>
+            ${t.topics.map((top, topIdx) => `
+              <li class="prep-topic-btn" onclick="openStudyModal(${tIdx}, ${topIdx})">
+                ${escapeHtml(top.title)}
+                <span class="prep-topic-arrow">Read notes →</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('');
+
+      document.getElementById('tipsList').innerHTML = `
+        <ul style="display:flex;flex-direction:column;gap:14px">
+          ${data.mockInterviewTips.map(tip => `
+            <li style="display:flex;gap:10px;align-items:flex-start">
+              <span style="color:var(--teal-600);font-weight:700">✓</span>
+              <span style="font-size:0.9rem;color:var(--ink-700)">${escapeHtml(tip)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+
+      document.getElementById('companyTable').innerHTML = `
+        <table>
+          <thead><tr><th>Company / type</th><th>Focus areas</th><th>Pattern</th></tr></thead>
+          <tbody>
+            ${data.companyWiseLinks.map(c => `
+              <tr>
+                <td style="font-weight:600">${escapeHtml(c.company)}</td>
+                <td>${escapeHtml(c.focus)}</td>
+                <td class="text-muted">${escapeHtml(c.pattern)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (err) {
+      document.getElementById('tracksGrid').innerHTML = `<p class="text-muted">Couldn't load prep content right now.</p>`;
+    }
+  }
+
+  const studyModal = document.getElementById('studyModal');
+  document.getElementById('closeStudyModal').addEventListener('click', () => studyModal.classList.remove('show'));
+  studyModal.addEventListener('click', (e) => { if (e.target === studyModal) studyModal.classList.remove('show'); });
+
+  function openStudyModal(trackIdx, topicIdx) {
+    const track = prepTracks[trackIdx];
+    const topic = track.topics[topicIdx];
+    document.getElementById('studyModalTrack').textContent = track.title;
+    document.getElementById('studyModalTitle').textContent = topic.title;
+    document.getElementById('studyModalPoints').innerHTML = topic.points.map(p => `
+      <li style="display:flex;gap:10px;align-items:flex-start">
+        <span style="color:var(--teal-600);font-weight:700;flex-shrink:0">•</span>
+        <span style="font-size:0.92rem;color:var(--ink-700);line-height:1.6">${escapeHtml(p)}</span>
+      </li>
+    `).join('');
+    studyModal.classList.add('show');
+  }
+
+  loadPrep();
+</script>
+</body>
+</html>
