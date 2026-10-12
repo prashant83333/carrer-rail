@@ -3,106 +3,416 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CareerRail — Job Portal for Students & Recruiters</title>
+<title>Skillora — Learn Skills. Land Your Future.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2.1">
 <script src="js/theme.js"></script>
 </head>
-<body>
+<body class="home-page">
 
 <header class="navbar" id="navbar"></header>
 
+<!-- Hero Section -->
 <section class="hero">
-  <div class="container">
-    <span class="hero-eyebrow">● Built for campus placements</span>
-    <h1>Find the job that starts your <span class="accent">career track</span>, not just your next role.</h1>
-    <p class="lead">Search openings, apply with your resume, practice coding problems, take quizzes, read study notes and track every application — all in one place.</p>
-    <div class="hero-actions">
-      <a href="jobs.html" class="btn btn-primary">Browse Jobs</a>
-      <a href="signup.html" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.4)">Create Free Account</a>
-    </div>
+  <div class="container hero-grid">
+    <div class="hero-content">
+      <span class="hero-eyebrow">🎓 Built for campus placements</span>
+      <h1>Everything You Need to<br>Start Your <span class="accent">Career.</span></h1>
+      <p class="lead"><strong>Learn Skills. Land Your Future.</strong> Discover verified opportunities, practice coding, prepare for placements, and build career-ready skills — all in one place.</p>
+      
+      <form class="hero-search-box" id="heroSearchForm">
+        <div class="search-field search-query-field">
+          <svg class="search-field-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="9" r="6"></circle>
+            <line x1="13.5" y1="13.5" x2="18" y2="18"></line>
+          </svg>
+          <input type="text" id="heroQ" placeholder="Search jobs, skills, or companies" autocomplete="off">
+        </div>
+        <div class="search-field-divider"></div>
+        <div class="search-field search-location-field">
+          <svg class="search-field-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6z"></path>
+            <circle cx="10" cy="8" r="2"></circle>
+          </svg>
+          <div class="search-select-wrap">
+            <select id="heroLoc" class="search-loc-select">
+              <option value="">Location</option>
+              <option value="Remote">Remote</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+              <option value="Delhi NCR">Delhi NCR</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Chennai">Chennai</option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 4.5 6 7.5 9 4.5"></polyline>
+            </svg>
+          </div>
+        </div>
+        <button type="submit" class="search-submit-btn">Search</button>
+      </form>
 
-    <form class="search-bar" id="heroSearchForm">
-      <input type="text" id="heroQ" placeholder="Job title, skill or company (e.g. React, TCS)">
-      <input type="text" id="heroLoc" placeholder="Location">
-      <button type="submit" class="btn btn-amber">Search</button>
-    </form>
-
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="num" id="statJobs">—</div><div class="label">Active job openings</div></div>
-      <div class="hero-stat"><div class="num" id="statCompanies">—</div><div class="label">Hiring companies</div></div>
-      <div class="hero-stat"><div class="num">6</div><div class="label">Placement prep tracks</div></div>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="section-head">
-      <div>
-        <h2>StudyHub — practice, test and read, all in one place</h2>
-        <p>Search across coding problems, quizzes and notes to prep on your own schedule.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 2l6 3v5c0 4.5-3 7.5-6 8.5C7 17.5 4 14.5 4 10V5l6-3z"></path>
+              <polyline points="7.5 10 9.5 12 13 8"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div class="num" id="statJobs">1L+</div>
+            <div class="label">Active job openings</div>
+          </div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="6" width="15" height="11" rx="2"></rect>
+              <path d="M7 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="num" id="statCompanies">10K+</div>
+            <div class="label">Hiring companies</div>
+          </div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="16" y1="16" x2="16" y2="8"></line>
+              <line x1="10" y1="16" x2="10" y2="4"></line>
+              <line x1="4" y1="16" x2="4" y2="12"></line>
+            </svg>
+          </div>
+          <div>
+            <div class="num">5L+</div>
+            <div class="label">Placement prep tracks</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="grid grid-3">
-      <a href="coding-practice.html" class="card prep-card">
-        <div class="prep-icon">💻</div>
-        <h3>Coding practice</h3>
-        <p>Solve DSA problems in an in-browser JavaScript editor with instant test-case feedback.</p>
+
+    <div class="hero-visual" aria-hidden="true">
+      <img src="assets/hero-student.png" alt="Student preparing for placement with Skillora dashboard">
+    </div>
+  </div>
+</section>
+
+<!-- Feature Cards: 5 Pillars Row -->npm run dev
+<section class="section feature-cards-section">
+  <div class="container">
+    <div class="explore-grid">
+      <a href="jobs.html" class="explore-card">
+        <div class="explore-icon icon-briefcase">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <div>
+          <h3>Jobs</h3>
+          <p>Find campus and graduate opportunities that match your skills.</p>
+        </div>
+        <span class="explore-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </span>
       </a>
-      <a href="quizzes.html" class="card prep-card">
-        <div class="prep-icon">📝</div>
-        <h3>Quizzes</h3>
-        <p>Timed multiple-choice quizzes by subject, with an instant score and full answer review.</p>
+      <a href="coding-practice.html" class="explore-card">
+        <div class="explore-icon icon-code">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h3>Coding Practice</h3>
+          <p>Practice DSA and coding problems with in-browser JavaScript evaluation.</p>
+        </div>
+        <span class="explore-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </span>
       </a>
-      <a href="notes.html" class="card prep-card">
-        <div class="prep-icon">📄</div>
-        <h3>Study notes</h3>
-        <p>Search and read PDF notes uploaded for your subjects, right in the browser.</p>
+      <a href="quizzes.html" class="explore-card">
+        <div class="explore-icon icon-quiz">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h3>Quizzes</h3>
+          <p>Test your technical knowledge with timed multiple-choice assessments.</p>
+        </div>
+        <span class="explore-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </span>
+      </a>
+      <a href="notes.html" class="explore-card">
+        <div class="explore-icon icon-notes">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h3>Study Notes</h3>
+          <p>Access curated PDF notes and subject guides anytime.</p>
+        </div>
+        <span class="explore-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </span>
+      </a>
+      <a href="placement-prep.html" class="explore-card">
+        <div class="explore-icon icon-prep">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </div>
+        <div>
+          <h3>Placement Prep</h3>
+          <p>Structured curriculum covering aptitude, CS fundamentals, and HR rounds.</p>
+        </div>
+        <span class="explore-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </span>
       </a>
     </div>
   </div>
 </section>
 
+<!-- How It Works (4-Step Timeline) -->
 <section class="track">
   <div class="container">
     <div class="track-heading">
-      <span class="eyebrow">How it works</span>
-      <h2>From application to offer letter</h2>
-      <p>A simple, four-stop track — the same one every applicant on CareerRail follows.</p>
+      <span class="eyebrow">HOW IT WORKS</span>
+      <h2>Your Path to Success in <span class="accent">4 Simple Steps</span></h2>
+      <p>A clear roadmap to help you learn, practice, and get placed — all in one platform.</p>
     </div>
     <div class="track-rail">
       <div class="track-step">
         <div class="marker">01</div>
-        <h4>Build your profile</h4>
-        <p>Add your skills and upload a resume once — reuse it for every application.</p>
+        <div class="track-icon-bubble">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div>
+          <h4>Explore Jobs</h4>
+          <p>Add your skills and upload a resume once — reuse it for every application.</p>
+        </div>
       </div>
       <div class="track-step">
         <div class="marker">02</div>
-        <h4>Search & apply</h4>
-        <p>Filter by role, location, salary and mode to find jobs that actually fit.</p>
+        <div class="track-icon-bubble">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h4>Prepare &amp; Practice</h4>
+          <p>Filter by role, location, salary and mode to find jobs that actually fit.</p>
+        </div>
       </div>
       <div class="track-step">
         <div class="marker">03</div>
-        <h4>Prepare</h4>
-        <p>Work through aptitude, DSA, CS fundamentals and HR prep tracks.</p>
+        <div class="track-icon-bubble">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h4>Apply</h4>
+          <p>Work through aptitude, DSA, CS fundamentals and HR prep tracks.</p>
+        </div>
       </div>
       <div class="track-step">
         <div class="marker">04</div>
-        <h4>Track & get hired</h4>
-        <p>Follow your application status live — Applied to Selected.</p>
+        <div class="track-icon-bubble">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+            <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+            <path d="M9 12H4s.55-3.03 2-4.5c1.62-1.63 5-2.5 5-2.5"></path>
+            <path d="M15 12v5s3.03-.55 4.5-2c1.63-1.62 2.5-5 2.5-5"></path>
+          </svg>
+        </div>
+        <div>
+          <h4>Get Hired</h4>
+          <p>Follow your dream job with the right preparation and support.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- Split Section: Explore by Domain & Frequently Asked Questions -->
+<section class="section">
+  <div class="container">
+    <div class="split-grid">
+      <!-- Left: Explore by Domain Card -->
+      <div class="domain-card-wrap">
+        <div class="domain-head">
+          <span class="domain-eyebrow">Explore by Domain</span>
+          <h3>Build Skills. Grow Faster.</h3>
+          <p>Choose your area of interest and start learning at your own pace.</p>
+        </div>
+        <div class="domain-grid">
+          <a href="coding-practice.html" class="domain-item">
+            <div class="domain-icon di-dsa">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="5" r="3"></circle>
+                <circle cx="6" cy="19" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="17" x2="10.42" y2="7.8"></line>
+                <line x1="15.41" y1="17" x2="13.58" y2="7.8"></line>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>DSA</strong>
+              <small>Data Structures &amp; Algorithms</small>
+            </div>
+          </a>
+          <a href="notes.html?q=Java" class="domain-item">
+            <div class="domain-icon di-java">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                <line x1="6" y1="1" x2="6" y2="4"></line>
+                <line x1="10" y1="1" x2="10" y2="4"></line>
+                <line x1="14" y1="1" x2="14" y2="4"></line>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>Core Java</strong>
+              <small>Java Programming</small>
+            </div>
+          </a>
+          <a href="notes.html?q=SQL" class="domain-item">
+            <div class="domain-icon di-sql">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>SQL</strong>
+              <small>Database Querying</small>
+            </div>
+          </a>
+          <a href="notes.html?q=DBMS" class="domain-item">
+            <div class="domain-icon di-dbms">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>DBMS</strong>
+              <small>Database Management</small>
+            </div>
+          </a>
+          <a href="notes.html?q=Operating%20Systems" class="domain-item">
+            <div class="domain-icon di-os">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>Operating Systems</strong>
+              <small>OS Concepts</small>
+            </div>
+          </a>
+          <a href="notes.html?q=Networking" class="domain-item">
+            <div class="domain-icon di-net">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="6" height="6" rx="1"></rect>
+                <rect x="16" y="2" width="6" height="6" rx="1"></rect>
+                <rect x="9" y="16" width="6" height="6" rx="1"></rect>
+                <path d="M5 8v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"></path>
+                <line x1="12" y1="13" x2="12" y2="16"></line>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>Networking</strong>
+              <small>Network &amp; Protocols</small>
+            </div>
+          </a>
+          <a href="placement-prep.html" class="domain-item">
+            <div class="domain-icon di-apt">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>Aptitude</strong>
+              <small>Logical &amp; Quantitative</small>
+            </div>
+          </a>
+          <a href="placement-prep.html" class="domain-item">
+            <div class="domain-icon di-more">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1.5"></circle>
+                <circle cx="19" cy="12" r="1.5"></circle>
+                <circle cx="5" cy="12" r="1.5"></circle>
+              </svg>
+            </div>
+            <div class="domain-info">
+              <strong>More</strong>
+              <small>And many more...</small>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Frequently Asked Questions Card -->
+      <div class="faq-box-wrap">
+        <div class="faq-head">
+          <h3>Frequently Asked Questions</h3>
+          <p>Quick answers to your common queries</p>
+        </div>
+        <div id="faqList" class="faq-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Popular Opportunities -->
 <section class="section section-alt">
   <div class="container">
     <div class="section-head">
       <div>
-        <h2>Latest openings</h2>
-        <p>Freshly posted roles from recruiters on CareerRail.</p>
+        <h2>Popular Opportunities</h2>
+        <p>Freshly posted campus and graduate roles from verified hiring partners.</p>
       </div>
       <a href="jobs.html" class="btn btn-outline btn-sm">View all jobs →</a>
     </div>
@@ -112,27 +422,13 @@
   </div>
 </section>
 
+<!-- Hiring Companies -->
 <section class="section">
   <div class="container">
     <div class="section-head">
       <div>
-        <h2>Placement preparation</h2>
-        <p>Everything you need before the interview — not just the job listing.</p>
-      </div>
-      <a href="placement-prep.html" class="btn btn-outline btn-sm">Explore all tracks →</a>
-    </div>
-    <div class="grid grid-3" id="prepPreview">
-      <div class="spinner"></div>
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt">
-  <div class="container">
-    <div class="section-head">
-      <div>
-        <h2>Companies hiring on CareerRail</h2>
-        <p>A sample of the companies actively posting roles right now.</p>
+        <h2>Companies hiring on Skillora</h2>
+        <p>Top hiring partners actively reviewing student profiles and hosting placement drives.</p>
       </div>
     </div>
     <div class="grid grid-4" id="topCompanies">
@@ -141,69 +437,84 @@
   </div>
 </section>
 
-<section class="section">
+<!-- Testimonials -->
+<section class="section section-alt">
   <div class="container">
     <div class="section-head">
       <div>
         <h2>What students say</h2>
-        <p>Early feedback from students using CareerRail for their placement drive.</p>
+        <p>Real feedback from students who prepared and secured offers through Skillora.</p>
       </div>
     </div>
     <div class="grid grid-3">
-      <div class="card" style="padding:26px">
-        <p style="color:var(--ink-700);font-style:italic">"Having the prep tracks and the job search in one place saved me from juggling five different tabs during placement season."</p>
-        <div class="flex gap-12 mt-24">
-          <div class="job-logo" style="background:var(--teal-500);color:var(--navy-950)">A</div>
-          <div><div style="font-weight:600;font-size:0.9rem">Aditi Sharma</div><div class="text-muted" style="font-size:0.8rem">Final year, CSE</div></div>
+      <div class="card" style="padding:24px">
+        <p style="color:var(--text-secondary);font-style:italic;line-height:1.6">"Having the prep tracks, coding practice, and job listings all in one place saved me from juggling dozens of tabs during placement season."</p>
+        <div class="flex gap-12 mt-16">
+          <div class="job-logo">A</div>
+          <div><div style="font-weight:700;font-size:0.9rem;color:var(--text-primary)">Aditi Sharma</div><div class="text-muted" style="font-size:0.8rem">Final year, CSE</div></div>
         </div>
       </div>
-      <div class="card" style="padding:26px">
-        <p style="color:var(--ink-700);font-style:italic">"The application status tracker meant I actually knew where I stood with each company, instead of just waiting on email."</p>
-        <div class="flex gap-12 mt-24">
-          <div class="job-logo" style="background:var(--amber-400);color:var(--navy-950)">R</div>
-          <div><div style="font-weight:600;font-size:0.9rem">Rohan Mehta</div><div class="text-muted" style="font-size:0.8rem">Final year, ECE</div></div>
+      <div class="card" style="padding:24px">
+        <p style="color:var(--text-secondary);font-style:italic;line-height:1.6">"The transparent application stage tracker meant I always knew where I stood with each company instead of waiting in the dark."</p>
+        <div class="flex gap-12 mt-16">
+          <div class="job-logo">R</div>
+          <div><div style="font-weight:700;font-size:0.9rem;color:var(--text-primary)">Rohan Mehta</div><div class="text-muted" style="font-size:0.8rem">Final year, ECE</div></div>
         </div>
       </div>
-      <div class="card" style="padding:26px">
-        <p style="color:var(--ink-700);font-style:italic">"Posting a role and reviewing resumes took a fraction of the time compared to sorting through email attachments."</p>
-        <div class="flex gap-12 mt-24">
-          <div class="job-logo" style="background:var(--navy-800);color:var(--teal-400)">S</div>
-          <div><div style="font-weight:600;font-size:0.9rem">Sanya Kapoor</div><div class="text-muted" style="font-size:0.8rem">Talent Acquisition, hiring partner</div></div>
+      <div class="card" style="padding:24px">
+        <p style="color:var(--text-secondary);font-style:italic;line-height:1.6">"Posting openings and shortlisting candidates took a fraction of the time compared to sorting through scattered email attachments."</p>
+        <div class="flex gap-12 mt-16">
+          <div class="job-logo">S</div>
+          <div><div style="font-weight:700;font-size:0.9rem;color:var(--text-primary)">Sanya Kapoor</div><div class="text-muted" style="font-size:0.8rem">Talent Acquisition Partner</div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section section-alt">
-  <div class="container" style="max-width:800px">
-    <div class="section-head" style="justify-content:center;text-align:center;flex-direction:column">
-      <h2>Frequently asked questions</h2>
-    </div>
-    <div id="faqList" style="display:flex;flex-direction:column;gap:12px"></div>
-  </div>
-</section>
-
+<!-- Footer -->
 <footer>
   <div class="container">
     <div class="footer-inner">
-      <div>
-        <div class="footer-brand">CareerRail.</div>
-        <p style="max-width:280px">A campus-friendly job portal — apply, track and prepare, all in one place.</p>
-        <div class="flex gap-12 mt-16" id="socialLinks">
-          <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn" class="social-icon">in</a>
-          <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub" class="social-icon">gh</a>
-          <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter" class="social-icon">tw</a>
+      <div class="footer-brand">
+        <svg class="footer-logo-svg" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4C18.5 4 24 8.5 24 15C24 19.5 21 23 16.5 25C13.5 26.3 10 27 6 27C3 27 1 25 1 22C1 16 6 10.5 12 4Z" fill="#34D399" />
+          <path d="M24 32C17.5 32 12 27.5 12 21C12 16.5 15 13 19.5 11C22.5 9.7 26 9 30 9C33 9 35 11 35 14C35 20 30 25.5 24 32Z" fill="#16866A" />
+        </svg>
+        <div>
+          <span class="brand-title">Skillora</span>
+          <span class="brand-tagline">Learn Skills. Land Your Future.</span>
         </div>
       </div>
-      <div class="footer-links">
+      <nav class="footer-links">
+        <a href="index.html">Home</a>
         <a href="jobs.html">Browse Jobs</a>
+        <a href="coding-practice.html">Coding Practice</a>
+        <a href="quizzes.html">Quizzes</a>
+        <a href="notes.html">Notes</a>
         <a href="placement-prep.html">Placement Prep</a>
-        <a href="signup.html">Sign up</a>
-        <a href="login.html">Log in</a>
+      </nav>
+      <div class="footer-social-wrap">
+        <div class="footer-socials">
+          <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub" class="footer-social-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="X" class="footer-social-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16m0-16L4 20"></path></svg>
+          </a>
+          <a href="https://www.instagram.com/prashant_pachauri9/?__pwa=1" target="_blank" rel="noopener" aria-label="Instagram" class="footer-social-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/prashant-pachauri-02944a301/?isSelfProfile=true" target="_blank" rel="noopener" aria-label="LinkedIn" class="footer-social-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube" class="footer-social-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+          </a>
+        </div>
+        <div class="footer-copy">© 2026 Skillora. All rights reserved.</div>
       </div>
     </div>
-    <div class="footer-bottom">© 2026 CareerRail. Built for students &amp; recruiters.</div>
   </div>
 </footer>
 
@@ -265,29 +576,6 @@
       </a>`;
   }
 
-  async function loadPrepPreview() {
-    const el = document.getElementById('prepPreview');
-    try {
-      const data = await apiRequest('/prep');
-      el.innerHTML = data.tracks.slice(0, 3).map(t => `
-        <div class="card prep-card">
-          <div class="prep-icon">${prepIcon(t.icon)}</div>
-          <h3>${escapeHtml(t.title)}</h3>
-          <p>${escapeHtml(t.description)}</p>
-        </div>
-      `).join('');
-    } catch (err) {
-      el.innerHTML = `<p class="text-muted">Couldn't load prep tracks right now.</p>`;
-    }
-  }
-
-  function prepIcon(name) {
-    const icons = {
-      calculator: '🧮', code: '💻', layers: '🗄️', network: '🌐', users: '🗣️', file: '📄'
-    };
-    return icons[name] || '📘';
-  }
-
   async function loadTopCompanies() {
     const el = document.getElementById('topCompanies');
     try {
@@ -298,8 +586,8 @@
         return;
       }
       el.innerHTML = companies.map(c => `
-        <a href="jobs.html?q=${encodeURIComponent(c)}" class="card text-center" style="padding:26px 16px">
-          <div class="job-logo" style="margin:0 auto 12px">${escapeHtml(c.charAt(0))}</div>
+        <a href="jobs.html?q=${encodeURIComponent(c)}" class="card text-center" style="padding:22px 16px">
+          <div class="job-logo" style="margin:0 auto 10px">${escapeHtml(c.charAt(0))}</div>
           <div style="font-weight:600;font-size:0.9rem">${escapeHtml(c)}</div>
         </a>
       `).join('');
@@ -309,20 +597,35 @@
   }
 
   const faqs = [
-    { q: 'Is CareerRail free for students?', a: 'Yes — creating a job-seeker account, uploading your resume, applying to jobs, and using the placement prep tracks are all free.' },
-    { q: 'Can I apply to a job without uploading a resume?', a: 'No — a resume upload is required before your first application, since it\u2019s attached to every job you apply to. You can upload it once from your profile page.' },
-    { q: 'How do I track my application status?', a: 'Go to "My Applications" from the navbar — it shows a live status for every job you\u2019ve applied to, from Applied through to Selected or Rejected.' },
-    { q: 'Can recruiters post more than one job?', a: 'Yes — recruiters can post unlimited job openings and manage them all from their dashboard, including closing or reopening a listing.' }
+    { q: 'Is Skillora free for students?', a: 'Yes — creating a student account, uploading your resume, applying to campus jobs, and using the StudyHub & placement prep tracks are completely free.' },
+    { q: 'Can I apply to a job without uploading a resume?', a: 'No — a resume upload is required before your first application, since it is securely attached to every job you apply to. You can upload it once from your profile page.' },
+    { q: 'How do I track my application status?', a: 'Visit "Dashboard" from the navigation bar — it displays your live recruitment progress for every opening (Applied → Shortlisted → Interview → Selected/Rejected).' },
+    { q: 'Can recruiters post more than one job?', a: 'Yes — recruiters can post unlimited job openings and manage candidates directly from the Recruiter Dashboard.' }
   ];
 
   function renderFaq() {
-    document.getElementById('faqList').innerHTML = faqs.map((f, i) => `
-      <div class="card faq-item">
-        <button class="faq-question" onclick="toggleFaq(${i})">
-          <span>${escapeHtml(f.q)}</span>
-          <span class="faq-icon" id="faqIcon${i}">+</span>
+    const el = document.getElementById('faqList');
+    if (!el) return;
+    el.innerHTML = faqs.map((f, i) => `
+      <div class="faq-item" id="faqItem${i}">
+        <button class="faq-question" onclick="toggleFaq(${i})" type="button" aria-expanded="false">
+          <div class="faq-q-left">
+            <span class="faq-icon-bubble">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </span>
+            <span>${escapeHtml(f.q)}</span>
+          </div>
+          <svg class="faq-chevron" id="faqIcon${i}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </button>
-        <div class="faq-answer" id="faqAnswer${i}">${escapeHtml(f.a)}</div>
+        <div class="faq-answer" id="faqAnswer${i}">
+          <p>${escapeHtml(f.a)}</p>
+        </div>
       </div>
     `).join('');
   }
@@ -330,12 +633,13 @@
   function toggleFaq(i) {
     const answer = document.getElementById(`faqAnswer${i}`);
     const icon = document.getElementById(`faqIcon${i}`);
+    const btn = document.querySelector(`#faqItem${i} .faq-question`);
     const open = answer.classList.toggle('open');
-    icon.textContent = open ? '−' : '+';
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (icon) icon.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
   }
 
   loadFeaturedJobs();
-  loadPrepPreview();
   loadTopCompanies();
   renderFaq();
 </script>

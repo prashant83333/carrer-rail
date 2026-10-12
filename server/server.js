@@ -48,4 +48,14 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n❌ Error: Port ${PORT} is already in use by another running process.`);
+    console.error(`💡 Run this in PowerShell to free it: Stop-Process -Name node -Force\n`);
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+  }
+});

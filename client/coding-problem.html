@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Solve Problem — CareerRail</title>
+<title>Solve Problem — Skillora</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2.0">
 <script src="js/theme.js"></script>
 <style>
+  body { background: #f4f7fc; }
   .code-editor {
     width: 100%;
     min-height: 320px;
@@ -22,10 +23,22 @@
     border: 1px solid var(--line);
     resize: vertical;
     tab-size: 2;
+    outline: none;
+    transition: border-color .22s ease, box-shadow .22s ease;
   }
+  .code-editor:focus { border-color: var(--teal-500); box-shadow: 0 0 0 4px rgba(45,212,191,.14); }
+  .editor-shell { overflow: hidden; border-radius: 16px; background: #0e1626; box-shadow: 0 18px 38px rgba(10,25,48,.18); }
+  .editor-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.1); background:linear-gradient(90deg,#101e38,#15264a); }
+  .editor-toolbar label { color:#dce9ff; font-size:.8rem; font-weight:700; }
+  .language-select { appearance:none; min-width:145px; padding:8px 32px 8px 11px; border:1px solid rgba(94,234,212,.38); border-radius:8px; background:#0a1630; color:#eef6ff; font:600 .8rem var(--font-body); cursor:pointer; background-image:linear-gradient(45deg,transparent 50%,#5eead4 50%),linear-gradient(135deg,#5eead4 50%,transparent 50%); background-position:calc(100% - 14px) 13px,calc(100% - 9px) 13px; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+  .editor-toolbar .lang-status { color:#8ea5cb; font-size:.73rem; }
+  .editor-shell .code-editor { border:0; border-radius:0; min-height:350px; }
+  .language-notice { margin-top:10px; padding:10px 12px; border-radius:9px; color:#8fa6cb; background:#edf3ff; border:1px solid #d8e5fb; font-size:.78rem; line-height:1.5; }
+  .language-notice strong { color:#193563; }
   .result-row { padding: 12px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 8px; font-family: var(--font-mono); }
   .result-pass { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
   .result-fail { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+  @media (max-width:620px) { .editor-toolbar { align-items:flex-start; flex-direction:column; }.language-select { width:100%; } }
 </style>
 </head>
 <body>
@@ -46,6 +59,19 @@
   const problemId = new URLSearchParams(window.location.search).get('id');
   const content = document.getElementById('content');
   let problem = null;
+  let activeLanguage = 'javascript';
+  const languageDrafts = {};
+
+  function starterFor(language) {
+    const name = problem.functionName;
+    const templates = {
+      javascript: problem.starterCode || `function ${name}() {\n  \n}`,
+      python: `def ${name}(*args):\n    # Write your solution here\n    pass\n`,
+      java: `class Solution {\n    public static Object ${name}(Object... args) {\n        // Write your solution here\n        return null;\n    }\n}\n`,
+      c: `#include <stdio.h>\n\n/* Implement ${name} using the required input/output logic. */\nint main(void) {\n    // Write your solution here\n    return 0;\n}\n`
+    };
+    return templates[language];
+  }
 
   function difficultyTag(d) {
     const cls = d === 'Easy' ? 'tag-teal' : d === 'Hard' ? 'tag' : 'tag-amber';
@@ -95,7 +121,20 @@
             <span class="text-muted" style="font-size:0.85rem">Function to implement: <span class="mono" style="color:var(--navy-950);font-weight:600">${escapeHtml(problem.functionName)}</span></span>
             <button class="btn btn-ghost btn-sm" id="resetBtn">Reset code</button>
           </div>
-          <textarea id="codeEditor" class="code-editor" spellcheck="false">${escapeHtml(problem.starterCode || `function ${problem.functionName}() {\n  \n}`)}</textarea>
+          <div class="editor-shell">
+            <div class="editor-toolbar">
+              <label for="languageSelect">Code language</label>
+              <select id="languageSelect" class="language-select" aria-label="Select coding language">
+                <option value="javascript">JavaScript (runnable)</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="c">C</option>
+              </select>
+              <span class="lang-status" id="languageStatus">JavaScript runner active</span>
+            </div>
+            <textarea id="codeEditor" class="code-editor" spellcheck="false">${escapeHtml(starterFor(activeLanguage))}</textarea>
+          </div>
+          <div class="language-notice" id="languageNotice"><strong>JavaScript is runnable now.</strong> C, Java, and Python templates are available for practice; their execution requires a secure multi-language runner.</div>
           <div class="flex gap-12 mt-16">
             <button class="btn btn-outline" id="runBtn">▶ Run (visible tests)</button>
             <button class="btn btn-primary" id="submitBtn">Submit (all tests)</button>
@@ -116,7 +155,18 @@
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-      editor.value = problem.starterCode || `function ${problem.functionName}() {\n  \n}`;
+      editor.value = starterFor(activeLanguage);
+    });
+    document.getElementById('languageSelect').value = activeLanguage;
+    document.getElementById('languageSelect').addEventListener('change', (event) => {
+      languageDrafts[activeLanguage] = editor.value;
+      activeLanguage = event.target.value;
+      editor.value = languageDrafts[activeLanguage] || starterFor(activeLanguage);
+      const runnable = activeLanguage === 'javascript';
+      document.getElementById('languageStatus').textContent = runnable ? 'JavaScript runner active' : `${event.target.options[event.target.selectedIndex].text.replace(' (runnable)', '')} practice mode`;
+      document.getElementById('languageNotice').innerHTML = runnable
+        ? '<strong>JavaScript is runnable now.</strong> Run uses visible tests; Submit also checks hidden tests.'
+        : `<strong>${escapeHtml(event.target.options[event.target.selectedIndex].text)} is editor-only right now.</strong> You can write and keep a draft here, but Run/Submit currently executes JavaScript only.`;
     });
     document.getElementById('runBtn').addEventListener('click', () => runCode(false));
     document.getElementById('submitBtn').addEventListener('click', () => runCode(true));
@@ -126,6 +176,10 @@
     const code = document.getElementById('codeEditor').value;
     const btn = document.getElementById(isSubmit ? 'submitBtn' : 'runBtn');
     const resultsArea = document.getElementById('resultsArea');
+    if (activeLanguage !== 'javascript') {
+      resultsArea.innerHTML = '<div class="result-row result-fail">Run and Submit are currently available for JavaScript only. Select JavaScript to execute this problem.</div>';
+      return;
+    }
     btn.disabled = true;
     btn.textContent = isSubmit ? 'Submitting...' : 'Running...';
     resultsArea.innerHTML = '<div class="spinner"></div>';
